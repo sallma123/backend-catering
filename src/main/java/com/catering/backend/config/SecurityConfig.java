@@ -20,10 +20,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // désactive CSRF (utile pour tests / applis mobiles)
+                .csrf(csrf -> csrf.disable()) // désactive CSRF pour permettre POST multipart
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // autoriser login/register
-                        .anyRequest().authenticated() // protéger toutes les autres routes
+                        .requestMatchers("/api/auth/**").permitAll()      // autoriser login/register
+                        .requestMatchers("/api/profile/**").permitAll()   // autoriser l'upload d'image
+                        .anyRequest().authenticated()                    // sécuriser les autres routes
                 );
 
         return http.build();
