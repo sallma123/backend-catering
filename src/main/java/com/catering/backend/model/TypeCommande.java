@@ -6,6 +6,7 @@ public enum TypeCommande {
     REPAS_COFFRET,
     BAPTEME,
     ANNIVERSAIRE,
-    SOUTENANCE
-    // Tu pourras ajouter d'autres plus tard
+    SOUTENANCE,
+    BUFFET_DE_SOUTENANCE,
+    SÉMINAIRE
 }
