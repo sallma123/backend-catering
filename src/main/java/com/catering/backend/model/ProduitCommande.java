@@ -1,5 +1,6 @@
 package com.catering.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -19,6 +20,7 @@ public class ProduitCommande {
 
     @ManyToOne
     @JoinColumn(name = "commande_id")
+    @JsonIgnore
     private Commande commande;
 
     // --- Getters et Setters ---

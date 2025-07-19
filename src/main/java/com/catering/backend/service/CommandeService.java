@@ -4,9 +4,13 @@ import com.catering.backend.dto.CommandeDTO;
 import com.catering.backend.dto.ProduitCommandeDTO;
 import com.catering.backend.model.Commande;
 import com.catering.backend.model.ProduitCommande;
+import com.catering.backend.model.StatutCommande;
+import com.catering.backend.model.TypeClient;
+import com.catering.backend.model.TypeCommande;
 import com.catering.backend.repository.CommandeRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,30 +25,39 @@ public class CommandeService {
 
     public Commande creerCommande(CommandeDTO dto) {
         Commande commande = new Commande();
-        commande.setTypeClient(dto.typeClient);
-        commande.setTypeCommande(dto.typeCommande);
-        commande.setStatut(dto.statut);
-        commande.setNomClient(dto.nomClient);
-        commande.setSalle(dto.salle);
-        commande.setNombreTables(dto.nombreTables);
-        commande.setPrixParTable(dto.prixParTable);
-        commande.setDate(dto.date);
 
-        List<ProduitCommande> produits = dto.produits.stream()
-                .filter(p -> p.selectionne) // on garde que les produits cochés
+        // ✅ Conversion des enums depuis les Strings du DTO
+        commande.setTypeClient(TypeClient.valueOf(dto.getTypeClient().toUpperCase()));
+        commande.setTypeCommande(TypeCommande.valueOf(dto.getTypeCommande().toUpperCase()));
+        commande.setStatut(StatutCommande.valueOf(dto.getStatut().toUpperCase()));
+
+        // ✅ Autres champs
+        commande.setNomClient(dto.getNomClient());
+        commande.setSalle(dto.getSalle());
+        commande.setNombreTables(dto.getNombreTables());
+        commande.setPrixParTable(dto.getPrixParTable());
+        commande.setDate(LocalDate.now()); // 🔄 Date générée automatiquement
+
+        // ✅ Transformation des produits cochés
+        List<ProduitCommande> produits = dto.getProduits().stream()
+                .filter(ProduitCommandeDTO::isSelectionne)
                 .map(p -> {
                     ProduitCommande produit = new ProduitCommande();
-                    produit.setNom(p.nom);
-                    produit.setCategorie(p.categorie);
-                    produit.setPrix(p.prix);
+                    produit.setNom(p.getNom());
+                    produit.setCategorie(p.getCategorie());
+                    produit.setPrix(p.getPrix());
                     produit.setSelectionne(true);
-                    produit.setCommande(commande);
+                    produit.setCommande(commande); // association bidirectionnelle
                     return produit;
                 }).collect(Collectors.toList());
 
+        // ✅ Ajout à la commande
         commande.setProduits(produits);
-        commande.setTotal(dto.prixParTable * dto.nombreTables +
-                produits.stream().mapToDouble(ProduitCommande::getPrix).sum());
+
+        // ✅ Calcul total
+        double totalProduits = produits.stream().mapToDouble(ProduitCommande::getPrix).sum();
+        double total = dto.getPrixParTable() * dto.getNombreTables() + totalProduits;
+        commande.setTotal(total);
 
         return commandeRepository.save(commande);
     }
