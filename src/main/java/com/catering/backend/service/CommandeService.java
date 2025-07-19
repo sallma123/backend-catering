@@ -36,7 +36,7 @@ public class CommandeService {
         commande.setSalle(dto.getSalle());
         commande.setNombreTables(dto.getNombreTables());
         commande.setPrixParTable(dto.getPrixParTable());
-        commande.setDate(LocalDate.now()); // 🔄 Date générée automatiquement
+        commande.setDate(LocalDate.parse(dto.getDate()));
 
         // ✅ Transformation des produits cochés
         List<ProduitCommande> produits = dto.getProduits().stream()

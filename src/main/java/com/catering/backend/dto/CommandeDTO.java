@@ -3,6 +3,7 @@ package com.catering.backend.dto;
 import java.util.List;
 
 public class CommandeDTO {
+
     private String typeClient;        // ex: "PARTICULIER", "ENTREPRISE"
     private String typeCommande;      // ex: "MARIAGE", "BUFFET"
     private String statut;            // ex: "NON_PAYEE", "PAYEE"
@@ -11,6 +12,8 @@ public class CommandeDTO {
     private String salle;
     private int nombreTables;
     private double prixParTable;
+
+    private String date; // ✅ Nouvelle propriété au format "yyyy-MM-dd"
 
     private List<ProduitCommandeDTO> produits;
 
@@ -69,6 +72,14 @@ public class CommandeDTO {
 
     public void setPrixParTable(double prixParTable) {
         this.prixParTable = prixParTable;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
     }
 
     public List<ProduitCommandeDTO> getProduits() {
