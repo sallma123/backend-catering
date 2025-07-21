@@ -41,4 +41,24 @@ public class ProfilController {
             return ResponseEntity.status(500).body("❌ Échec de l'upload du fichier : " + e.getMessage());
         }
     }
+    @PostMapping("/uploadHeaderFooter")
+    public ResponseEntity<String> uploadHeaderAndFooter(
+            @RequestParam("header") MultipartFile header,
+            @RequestParam("footer") MultipartFile footer
+    ) {
+        try {
+            File dossier = new File(UPLOAD_DIR);
+            if (!dossier.exists()) {
+                dossier.mkdirs();
+            }
+
+            header.transferTo(new File(Paths.get(UPLOAD_DIR, "header.jpg").toString()));
+            footer.transferTo(new File(Paths.get(UPLOAD_DIR, "footer.jpg").toString()));
+
+            return ResponseEntity.ok("✅ Entête et pied de page uploadés avec succès.");
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("❌ Erreur lors de l'upload : " + e.getMessage());
+        }
+    }
+
 }
