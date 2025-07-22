@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,9 +19,6 @@ public class PdfService {
 
     @Autowired
     private CommandeRepository commandeRepository;
-
-    private static final String HEADER_IMAGE_PATH = System.getProperty("user.dir") + File.separator + "uploads" + File.separator + "header.jpg";
-    private static final String FOOTER_IMAGE_PATH = System.getProperty("user.dir") + File.separator + "uploads" + File.separator + "footer.jpg";
 
     public byte[] genererFicheCommande(Long commandeId) throws Exception {
         Commande commande = commandeRepository.findById(commandeId)
@@ -30,19 +28,16 @@ public class PdfService {
                 .filter(ProduitCommande::isSelectionne)
                 .collect(Collectors.toList());
 
-        Document document = new Document(PageSize.A4);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PdfWriter writer = PdfWriter.getInstance(document, out);
-        document.open();
 
-        // ✅ Ajouter l'en-tête (image)
-        File headerFile = new File(HEADER_IMAGE_PATH);
-        if (headerFile.exists()) {
-            Image headerImage = Image.getInstance(HEADER_IMAGE_PATH);
-            headerImage.scaleToFit(500, 100);
-            headerImage.setAlignment(Image.ALIGN_CENTER);
-            document.add(headerImage);
-        }
+        // 📄 Créer le document avec marges pour header/footer
+        Document document = new Document(PageSize.A4, 36, 36, 120, 100);
+        PdfWriter writer = PdfWriter.getInstance(document, out);
+
+        // 🎯 Ajouter entête/pied de page
+        writer.setPageEvent(new HeaderFooterEvent());
+
+        document.open();
 
         // ✅ Titre
         Paragraph title = new Paragraph("Fiche technique", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18));
@@ -57,22 +52,31 @@ public class PdfService {
         document.add(new Paragraph("Nombre de tables : " + commande.getNombreTables()));
         document.add(new Paragraph(" "));
 
-        // ✅ Tableau des produits
-        PdfPTable table = new PdfPTable(4);
-        table.setWidthPercentage(100);
-        table.addCell("Désignation");
-        table.addCell("Quantité");
-        table.addCell("PU (DH)");
-        table.addCell("Total");
+        // ✅ Regrouper par catégorie
+        Map<String, List<ProduitCommande>> produitsParCategorie = produitsCoches.stream()
+                .collect(Collectors.groupingBy(ProduitCommande::getCategorie));
 
-        for (ProduitCommande produit : produitsCoches) {
-            table.addCell(produit.getNom());
-            table.addCell("1"); // quantité par défaut
-            table.addCell(String.valueOf(produit.getPrix()));
-            table.addCell(String.valueOf(produit.getPrix()));
+        for (String categorie : produitsParCategorie.keySet()) {
+            document.add(new Paragraph(categorie, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
+            document.add(new Paragraph(" "));
+
+            PdfPTable table = new PdfPTable(4);
+            table.setWidthPercentage(100);
+            table.addCell("Désignation");
+            table.addCell("Quantité");
+            table.addCell("PU (DH)");
+            table.addCell("Total");
+
+            for (ProduitCommande produit : produitsParCategorie.get(categorie)) {
+                table.addCell(produit.getNom());
+                table.addCell("1");
+                table.addCell(String.valueOf(produit.getPrix()));
+                table.addCell(String.valueOf(produit.getPrix()));
+            }
+
+            document.add(table);
+            document.add(new Paragraph(" "));
         }
-
-        document.add(table);
 
         // ✅ Total général
         double totalProduits = produitsCoches.stream()
@@ -81,17 +85,10 @@ public class PdfService {
         double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalProduits;
 
         document.add(new Paragraph(" "));
-        document.add(new Paragraph("Total général : " + totalGeneral + " DH"));
-
-        // ✅ Pied de page (image)
-        File footerFile = new File(FOOTER_IMAGE_PATH);
-        if (footerFile.exists()) {
-            document.add(new Paragraph(" "));
-            Image footerImage = Image.getInstance(FOOTER_IMAGE_PATH);
-            footerImage.scaleToFit(500, 80);
-            footerImage.setAlignment(Image.ALIGN_CENTER);
-            document.add(footerImage);
-        }
+        Paragraph totalParag = new Paragraph("Total général : " + totalGeneral + " DH",
+                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14));
+        totalParag.setAlignment(Element.ALIGN_RIGHT);
+        document.add(totalParag);
 
         document.close();
         writer.close();
