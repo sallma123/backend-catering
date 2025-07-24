@@ -39,11 +39,15 @@ public class PdfService {
 
         document.open();
 
-        // ✅ Titre
-        Paragraph title = new Paragraph("Fiche technique", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18));
+        // ✅ Titre avec numéro de commande
+        Paragraph title = new Paragraph(
+                "Fiche technique N° " + commande.getNumeroCommande(),
+                FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18)
+        );
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
         document.add(new Paragraph(" "));
+
 
         // ✅ Infos de la commande
         document.add(new Paragraph("Client : " + commande.getNomClient()));

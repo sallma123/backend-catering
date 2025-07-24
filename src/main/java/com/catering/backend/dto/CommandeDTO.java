@@ -3,7 +3,7 @@ package com.catering.backend.dto;
 import java.util.List;
 
 public class CommandeDTO {
-
+    private String numeroCommande;
     private String typeClient;        // ex: "PARTICULIER", "ENTREPRISE"
     private String typeCommande;      // ex: "MARIAGE", "BUFFET"
     private String statut;            // ex: "NON_PAYEE", "PAYEE"
@@ -88,5 +88,12 @@ public class CommandeDTO {
 
     public void setProduits(List<ProduitCommandeDTO> produits) {
         this.produits = produits;
+    }
+    public String getNumeroCommande() {
+        return numeroCommande;
+    }
+
+    public void setNumeroCommande(String numeroCommande) {
+        this.numeroCommande = numeroCommande;
     }
 }

@@ -22,7 +22,14 @@ public class CommandeService {
     public CommandeService(CommandeRepository commandeRepository) {
         this.commandeRepository = commandeRepository;
     }
+    public String genererNumeroCommande() {
+        int anneeActuelle = LocalDate.now().getYear();
 
+        int count = commandeRepository.countByYear(anneeActuelle);
+        int numeroIncremental = count + 1;
+
+        return numeroIncremental + "/" + anneeActuelle;
+    }
     public Commande creerCommande(CommandeDTO dto) {
         Commande commande = new Commande();
 
@@ -37,6 +44,7 @@ public class CommandeService {
         commande.setNombreTables(dto.getNombreTables());
         commande.setPrixParTable(dto.getPrixParTable());
         commande.setDate(LocalDate.parse(dto.getDate()));
+        commande.setNumeroCommande(genererNumeroCommande());
 
         // ✅ Transformation des produits cochés
         List<ProduitCommande> produits = dto.getProduits().stream()

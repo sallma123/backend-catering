@@ -10,7 +10,8 @@ public class Commande {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    @Column(unique = true)
+    private String numeroCommande;
     @Enumerated(EnumType.STRING)
     private TypeClient typeClient;
 
@@ -115,5 +116,12 @@ public class Commande {
 
     public void setProduits(List<ProduitCommande> produits) {
         this.produits = produits;
+    }
+    public String getNumeroCommande() {
+        return numeroCommande;
+    }
+
+    public void setNumeroCommande(String numeroCommande) {
+        this.numeroCommande = numeroCommande;
     }
 }
