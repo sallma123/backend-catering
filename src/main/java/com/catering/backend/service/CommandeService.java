@@ -70,9 +70,12 @@ public class CommandeService {
         return commandeRepository.save(commande);
     }
 
-    public List<Commande> getAllCommandes() {
-        return commandeRepository.findAll();
+    public List<CommandeDTO> getAllCommandes() {
+        return commandeRepository.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
+
 
     public Commande getCommandeById(Long id) {
         return commandeRepository.findById(id).orElse(null);
@@ -81,4 +84,29 @@ public class CommandeService {
     public void supprimerCommande(Long id) {
         commandeRepository.deleteById(id);
     }
+    public CommandeDTO toDTO(Commande commande) {
+        CommandeDTO dto = new CommandeDTO();
+        dto.setNumeroCommande(commande.getNumeroCommande());
+        dto.setNomClient(commande.getNomClient());
+        dto.setSalle(commande.getSalle());
+        dto.setDate(commande.getDate().toString());
+        dto.setNombreTables(commande.getNombreTables());
+        dto.setPrixParTable(commande.getPrixParTable());
+        dto.setStatut(commande.getStatut().name());
+        dto.setTypeClient(commande.getTypeClient().name());
+        dto.setTypeCommande(commande.getTypeCommande().name());
+
+        List<ProduitCommandeDTO> produitsDTO = commande.getProduits().stream().map(p -> {
+            ProduitCommandeDTO produitDTO = new ProduitCommandeDTO();
+            produitDTO.setNom(p.getNom());
+            produitDTO.setCategorie(p.getCategorie());
+            produitDTO.setPrix(p.getPrix());
+            produitDTO.setSelectionne(p.isSelectionne());
+            return produitDTO;
+        }).collect(Collectors.toList());
+
+        dto.setProduits(produitsDTO);
+        return dto;
+    }
+
 }

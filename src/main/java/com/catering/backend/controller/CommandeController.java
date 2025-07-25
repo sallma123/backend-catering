@@ -33,15 +33,17 @@ public class CommandeController {
 
     // ✅ Récupérer toutes les commandes
     @GetMapping
-    public List<Commande> getAllCommandes() {
+    public List<CommandeDTO> getAllCommandes() {
         return commandeService.getAllCommandes();
     }
 
+
     // ✅ Récupérer une commande par ID
     @GetMapping("/{id}")
-    public Commande getCommandeById(@PathVariable Long id) {
-        return commandeService.getCommandeById(id);
+    public CommandeDTO getCommandeById(@PathVariable Long id) {
+        return commandeService.toDTO(commandeService.getCommandeById(id));
     }
+
 
     // ✅ Supprimer une commande
     @DeleteMapping("/{id}")
@@ -62,4 +64,5 @@ public class CommandeController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
+    
 }
