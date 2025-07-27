@@ -28,6 +28,7 @@ public class Commande {
 
     private double prixParTable;
     private double total; // calculé après sélection produits + prestataires
+    private String objet;
 
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProduitCommande> produits;
@@ -124,4 +125,7 @@ public class Commande {
     public void setNumeroCommande(String numeroCommande) {
         this.numeroCommande = numeroCommande;
     }
+    public String getObjet() { return objet; }
+    public void setObjet(String objet) { this.objet = objet; }
+
 }

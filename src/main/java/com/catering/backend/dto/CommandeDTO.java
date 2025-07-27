@@ -16,7 +16,7 @@ public class CommandeDTO {
     private String salle;
     private int nombreTables;
     private double prixParTable;
-
+    private String objet;
     private String date;
     private List<ProduitCommandeDTO> produits;
 
@@ -109,5 +109,11 @@ public class CommandeDTO {
         this.numeroCommande = numeroCommande;
     }
 
+    public String getObjet() {
+        return objet;
+    }
 
+    public void setObjet(String objet) {
+        this.objet = objet;
+    }
 }

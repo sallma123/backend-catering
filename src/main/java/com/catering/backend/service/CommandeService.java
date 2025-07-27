@@ -42,6 +42,8 @@ public class CommandeService {
         commande.setPrixParTable(dto.getPrixParTable());
         commande.setDate(LocalDate.parse(dto.getDate()));
         commande.setNumeroCommande(genererNumeroCommande());
+        commande.setObjet(dto.getObjet());
+
 
         List<ProduitCommande> produits = dto.getProduits().stream()
                 .filter(ProduitCommandeDTO::isSelectionne)
@@ -93,6 +95,8 @@ public class CommandeService {
         dto.setStatut(commande.getStatut().name());
         dto.setTypeClient(commande.getTypeClient().name());
         dto.setTypeCommande(commande.getTypeCommande().name());
+        dto.setObjet(commande.getObjet());
+
 
         List<ProduitCommandeDTO> produitsDTO = commande.getProduits().stream().map(p -> {
             ProduitCommandeDTO produitDTO = new ProduitCommandeDTO();
@@ -118,6 +122,8 @@ public class CommandeService {
         existing.setTypeCommande(TypeCommande.valueOf(dto.getTypeCommande().toUpperCase()));
         existing.setStatut(StatutCommande.valueOf(dto.getStatut().toUpperCase()));
         existing.setDate(LocalDate.parse(dto.getDate()));
+        existing.setObjet(dto.getObjet());
+
 
         existing.getProduits().clear();
 

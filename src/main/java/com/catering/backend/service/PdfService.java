@@ -42,6 +42,18 @@ public class PdfService {
         document.add(title);
         document.add(new Paragraph(" "));
 
+// ✅ Vérifie si c'est un client entreprise
+        if ("ENTREPRISE".equalsIgnoreCase(commande.getTypeClient().name())) {
+            String objet = commande.getObjet();
+            if (objet == null || objet.trim().isEmpty()) {
+                objet = commande.getTypeCommande().name(); // On utilise .name() car c’est un enum
+            }
+            Paragraph objetPara = new Paragraph("Objet : " + objet, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13));
+            objetPara.setSpacingAfter(10);
+            document.add(objetPara);
+        }
+
+
         document.add(new Paragraph("Client : " + commande.getNomClient()));
         document.add(new Paragraph("Date : " + commande.getDate()));
         document.add(new Paragraph("Salle : " + commande.getSalle()));
@@ -68,9 +80,9 @@ public class PdfService {
                 // ✅ Produits standards : 1 ligne par produit avec quantité = nombreTables
                 for (ProduitCommande produit : produits) {
                     table.addCell(produit.getNom());
-                    table.addCell(String.valueOf(commande.getNombreTables())); // quantité standard
-                    table.addCell(""); // PU vide
-                    table.addCell(""); // Total vide
+                    table.addCell(String.valueOf(commande.getNombreTables()));
+                    table.addCell("");
+                    table.addCell("");
                 }
             } else {
                 // ✅ Suppléments : chaque ligne a sa propre quantité et PU
