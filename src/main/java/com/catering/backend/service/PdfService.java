@@ -57,7 +57,12 @@ public class PdfService {
         document.add(new Paragraph("Client : " + commande.getNomClient()));
         document.add(new Paragraph("Date : " + commande.getDate()));
         document.add(new Paragraph("Salle : " + commande.getSalle()));
-        document.add(new Paragraph("Nombre de tables : " + commande.getNombreTables()));
+        if ("ENTREPRISE".equalsIgnoreCase(commande.getTypeClient().name())) {
+            document.add(new Paragraph("Nombre de personnes : " + commande.getNombreTables()));
+        } else {
+            document.add(new Paragraph("Nombre de tables : " + commande.getNombreTables()));
+        }
+
         document.add(new Paragraph(" "));
 
         Map<String, List<ProduitCommande>> produitsParCategorie = produitsCoches.stream()
