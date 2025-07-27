@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,17 +28,12 @@ public class PdfService {
                 .collect(Collectors.toList());
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        // 📄 Créer le document avec marges pour header/footer
         Document document = new Document(PageSize.A4, 36, 36, 120, 100);
         PdfWriter writer = PdfWriter.getInstance(document, out);
-
-        // 🎯 Ajouter entête/pied de page
         writer.setPageEvent(new HeaderFooterEvent());
 
         document.open();
 
-        // ✅ Titre avec numéro de commande
         Paragraph title = new Paragraph(
                 "Fiche technique N° " + commande.getNumeroCommande(),
                 FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18)
@@ -48,15 +42,12 @@ public class PdfService {
         document.add(title);
         document.add(new Paragraph(" "));
 
-
-        // ✅ Infos de la commande
         document.add(new Paragraph("Client : " + commande.getNomClient()));
         document.add(new Paragraph("Date : " + commande.getDate()));
         document.add(new Paragraph("Salle : " + commande.getSalle()));
         document.add(new Paragraph("Nombre de tables : " + commande.getNombreTables()));
         document.add(new Paragraph(" "));
 
-        // ✅ Regrouper par catégorie
         Map<String, List<ProduitCommande>> produitsParCategorie = produitsCoches.stream()
                 .collect(Collectors.groupingBy(ProduitCommande::getCategorie));
 
@@ -71,11 +62,27 @@ public class PdfService {
             table.addCell("PU (DH)");
             table.addCell("Total");
 
-            for (ProduitCommande produit : produitsParCategorie.get(categorie)) {
-                table.addCell(produit.getNom());
-                table.addCell("1");
-                table.addCell(String.valueOf(produit.getPrix()));
-                table.addCell(String.valueOf(produit.getPrix()));
+            List<ProduitCommande> produits = produitsParCategorie.get(categorie);
+
+            if (!categorie.equalsIgnoreCase("Supplément")) {
+                // ✅ Produits standards : 1 ligne par produit avec quantité = nombreTables
+                for (ProduitCommande produit : produits) {
+                    table.addCell(produit.getNom());
+                    table.addCell(String.valueOf(commande.getNombreTables())); // quantité standard
+                    table.addCell(""); // PU vide
+                    table.addCell(""); // Total vide
+                }
+            } else {
+                // ✅ Suppléments : chaque ligne a sa propre quantité et PU
+                for (ProduitCommande produit : produits) {
+                    int qte = produit.getQuantite() != null ? produit.getQuantite() : 1;
+                    double total = produit.getPrix() * qte;
+
+                    table.addCell(produit.getNom());
+                    table.addCell(String.valueOf(qte));
+                    table.addCell(String.format("%.2f", produit.getPrix()));
+                    table.addCell(String.format("%.2f", total));
+                }
             }
 
             document.add(table);
@@ -83,13 +90,15 @@ public class PdfService {
         }
 
         // ✅ Total général
-        double totalProduits = produitsCoches.stream()
-                .mapToDouble(ProduitCommande::getPrix)
+        double totalSuppl = produitsCoches.stream()
+                .filter(p -> p.getCategorie().equalsIgnoreCase("Supplément"))
+                .mapToDouble(p -> p.getPrix() * (p.getQuantite() != null ? p.getQuantite() : 1))
                 .sum();
-        double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalProduits;
+
+        double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalSuppl;
 
         document.add(new Paragraph(" "));
-        Paragraph totalParag = new Paragraph("Total général : " + totalGeneral + " DH",
+        Paragraph totalParag = new Paragraph("Total général : " + String.format("%.2f", totalGeneral) + " DH",
                 FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14));
         totalParag.setAlignment(Element.ALIGN_RIGHT);
         document.add(totalParag);

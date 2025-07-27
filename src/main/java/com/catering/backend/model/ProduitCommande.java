@@ -8,14 +8,13 @@ public class ProduitCommande {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long id;
-
     private String nom;
-
     private String categorie; // ex: "Réception", "Dîner", etc.
-
     private double prix;
-
+    @Column(nullable = true)
+    private Integer quantite;
     private boolean selectionne;
 
     @ManyToOne
@@ -68,4 +67,12 @@ public class ProduitCommande {
     public void setCommande(Commande commande) {
         this.commande = commande;
     }
+    public Integer getQuantite() {
+        return quantite;
+    }
+
+    public void setQuantite(Integer quantite) {
+        this.quantite = quantite;
+    }
+
 }

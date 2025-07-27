@@ -5,8 +5,17 @@ public class ProduitCommandeDTO {
     private String categorie;
     private double prix;
     private boolean selectionne;
+    private Integer quantite; // Nullable pour les anciens appels
 
     // ✅ Getters
+    public Integer getQuantite() {
+        return quantite;
+    }
+
+    public void setQuantite(Integer quantite) {
+        this.quantite = quantite;
+    }
+
     public String getNom() {
         return nom;
     }

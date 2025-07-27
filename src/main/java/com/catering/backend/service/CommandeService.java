@@ -22,23 +22,20 @@ public class CommandeService {
     public CommandeService(CommandeRepository commandeRepository) {
         this.commandeRepository = commandeRepository;
     }
+
     public String genererNumeroCommande() {
         int anneeActuelle = LocalDate.now().getYear();
-
         int count = commandeRepository.countByYear(anneeActuelle);
         int numeroIncremental = count + 1;
-
         return numeroIncremental + "/" + anneeActuelle;
     }
+
     public Commande creerCommande(CommandeDTO dto) {
         Commande commande = new Commande();
 
-        // ✅ Conversion des enums depuis les Strings du DTO
         commande.setTypeClient(TypeClient.valueOf(dto.getTypeClient().toUpperCase()));
         commande.setTypeCommande(TypeCommande.valueOf(dto.getTypeCommande().toUpperCase()));
         commande.setStatut(StatutCommande.valueOf(dto.getStatut().toUpperCase()));
-
-        // ✅ Autres champs
         commande.setNomClient(dto.getNomClient());
         commande.setSalle(dto.getSalle());
         commande.setNombreTables(dto.getNombreTables());
@@ -46,7 +43,6 @@ public class CommandeService {
         commande.setDate(LocalDate.parse(dto.getDate()));
         commande.setNumeroCommande(genererNumeroCommande());
 
-        // ✅ Transformation des produits cochés
         List<ProduitCommande> produits = dto.getProduits().stream()
                 .filter(ProduitCommandeDTO::isSelectionne)
                 .map(p -> {
@@ -55,15 +51,16 @@ public class CommandeService {
                     produit.setCategorie(p.getCategorie());
                     produit.setPrix(p.getPrix());
                     produit.setSelectionne(true);
-                    produit.setCommande(commande); // association bidirectionnelle
+                    produit.setQuantite(p.getQuantite() != null ? p.getQuantite() : 1); // ✅ quantité
+                    produit.setCommande(commande);
                     return produit;
                 }).collect(Collectors.toList());
 
-        // ✅ Ajout à la commande
         commande.setProduits(produits);
 
-        // ✅ Calcul total
-        double totalProduits = produits.stream().mapToDouble(ProduitCommande::getPrix).sum();
+        double totalProduits = produits.stream()
+                .mapToDouble(p -> p.getPrix() * p.getQuantite())
+                .sum();
         double total = dto.getPrixParTable() * dto.getNombreTables() + totalProduits;
         commande.setTotal(total);
 
@@ -76,7 +73,6 @@ public class CommandeService {
                 .collect(Collectors.toList());
     }
 
-
     public Commande getCommandeById(Long id) {
         return commandeRepository.findById(id).orElse(null);
     }
@@ -84,9 +80,10 @@ public class CommandeService {
     public void supprimerCommande(Long id) {
         commandeRepository.deleteById(id);
     }
+
     public CommandeDTO toDTO(Commande commande) {
         CommandeDTO dto = new CommandeDTO();
-        dto.setId(commande.getId()); // ✅ Ajoute cette ligne
+        dto.setId(commande.getId());
         dto.setNumeroCommande(commande.getNumeroCommande());
         dto.setNomClient(commande.getNomClient());
         dto.setSalle(commande.getSalle());
@@ -103,6 +100,7 @@ public class CommandeService {
             produitDTO.setCategorie(p.getCategorie());
             produitDTO.setPrix(p.getPrix());
             produitDTO.setSelectionne(p.isSelectionne());
+            produitDTO.setQuantite(p.getQuantite()); // ✅ ajout de la quantité
             return produitDTO;
         }).collect(Collectors.toList());
 
@@ -113,7 +111,6 @@ public class CommandeService {
     public Commande modifierCommande(Long id, CommandeDTO dto) {
         Commande existing = getCommandeById(id);
 
-        // ✅ Mettre à jour les champs de base
         existing.setNomClient(dto.getNomClient());
         existing.setSalle(dto.getSalle());
         existing.setNombreTables(dto.getNombreTables());
@@ -122,10 +119,8 @@ public class CommandeService {
         existing.setStatut(StatutCommande.valueOf(dto.getStatut().toUpperCase()));
         existing.setDate(LocalDate.parse(dto.getDate()));
 
-        // ✅ Supprimer les anciens produits
         existing.getProduits().clear();
 
-        // ✅ Ajouter les nouveaux produits sélectionnés
         List<ProduitCommande> nouveauxProduits = dto.getProduits().stream()
                 .filter(ProduitCommandeDTO::isSelectionne)
                 .map(p -> {
@@ -134,19 +129,19 @@ public class CommandeService {
                     produit.setCategorie(p.getCategorie());
                     produit.setPrix(p.getPrix());
                     produit.setSelectionne(true);
-                    produit.setCommande(existing); // Association
+                    produit.setQuantite(p.getQuantite() != null ? p.getQuantite() : 1); // ✅ quantité
+                    produit.setCommande(existing);
                     return produit;
                 }).collect(Collectors.toList());
 
         existing.getProduits().addAll(nouveauxProduits);
 
-        // ✅ Recalculer le total
-        double totalProduits = nouveauxProduits.stream().mapToDouble(ProduitCommande::getPrix).sum();
+        double totalProduits = nouveauxProduits.stream()
+                .mapToDouble(p -> p.getPrix() * p.getQuantite())
+                .sum();
         double total = dto.getPrixParTable() * dto.getNombreTables() + totalProduits;
         existing.setTotal(total);
 
         return commandeRepository.save(existing);
     }
-
-
 }
