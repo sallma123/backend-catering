@@ -86,6 +86,7 @@ public class CommandeService {
     }
     public CommandeDTO toDTO(Commande commande) {
         CommandeDTO dto = new CommandeDTO();
+        dto.setId(commande.getId()); // ✅ Ajoute cette ligne
         dto.setNumeroCommande(commande.getNumeroCommande());
         dto.setNomClient(commande.getNomClient());
         dto.setSalle(commande.getSalle());
@@ -108,5 +109,44 @@ public class CommandeService {
         dto.setProduits(produitsDTO);
         return dto;
     }
+
+    public Commande modifierCommande(Long id, CommandeDTO dto) {
+        Commande existing = getCommandeById(id);
+
+        // ✅ Mettre à jour les champs de base
+        existing.setNomClient(dto.getNomClient());
+        existing.setSalle(dto.getSalle());
+        existing.setNombreTables(dto.getNombreTables());
+        existing.setPrixParTable(dto.getPrixParTable());
+        existing.setTypeCommande(TypeCommande.valueOf(dto.getTypeCommande().toUpperCase()));
+        existing.setStatut(StatutCommande.valueOf(dto.getStatut().toUpperCase()));
+        existing.setDate(LocalDate.parse(dto.getDate()));
+
+        // ✅ Supprimer les anciens produits
+        existing.getProduits().clear();
+
+        // ✅ Ajouter les nouveaux produits sélectionnés
+        List<ProduitCommande> nouveauxProduits = dto.getProduits().stream()
+                .filter(ProduitCommandeDTO::isSelectionne)
+                .map(p -> {
+                    ProduitCommande produit = new ProduitCommande();
+                    produit.setNom(p.getNom());
+                    produit.setCategorie(p.getCategorie());
+                    produit.setPrix(p.getPrix());
+                    produit.setSelectionne(true);
+                    produit.setCommande(existing); // Association
+                    return produit;
+                }).collect(Collectors.toList());
+
+        existing.getProduits().addAll(nouveauxProduits);
+
+        // ✅ Recalculer le total
+        double totalProduits = nouveauxProduits.stream().mapToDouble(ProduitCommande::getPrix).sum();
+        double total = dto.getPrixParTable() * dto.getNombreTables() + totalProduits;
+        existing.setTotal(total);
+
+        return commandeRepository.save(existing);
+    }
+
 
 }

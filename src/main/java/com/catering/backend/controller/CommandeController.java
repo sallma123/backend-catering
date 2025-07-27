@@ -64,5 +64,11 @@ public class CommandeController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
-    
+    // ✅ Modifier une commande existante
+    @PutMapping("/{id}")
+    public Commande modifierCommande(@PathVariable Long id, @RequestBody CommandeDTO commandeDTO) {
+        return commandeService.modifierCommande(id, commandeDTO);
+    }
+
+
 }

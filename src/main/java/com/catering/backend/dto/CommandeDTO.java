@@ -1,23 +1,34 @@
 package com.catering.backend.dto;
+import com.catering.backend.dto.ProduitCommandeDTO;
 
 import java.util.List;
 
 public class CommandeDTO {
+
+    private Long id; // ✅ Ajout du champ ID
+
     private String numeroCommande;
-    private String typeClient;        // ex: "PARTICULIER", "ENTREPRISE"
-    private String typeCommande;      // ex: "MARIAGE", "BUFFET"
-    private String statut;            // ex: "NON_PAYEE", "PAYEE"
+    private String typeClient;
+    private String typeCommande;
+    private String statut;
 
     private String nomClient;
     private String salle;
     private int nombreTables;
     private double prixParTable;
 
-    private String date; // ✅ Nouvelle propriété au format "yyyy-MM-dd"
-
+    private String date;
     private List<ProduitCommandeDTO> produits;
 
     // --- Getters & Setters ---
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getTypeClient() {
         return typeClient;
     }
@@ -89,6 +100,7 @@ public class CommandeDTO {
     public void setProduits(List<ProduitCommandeDTO> produits) {
         this.produits = produits;
     }
+
     public String getNumeroCommande() {
         return numeroCommande;
     }
@@ -96,4 +108,6 @@ public class CommandeDTO {
     public void setNumeroCommande(String numeroCommande) {
         this.numeroCommande = numeroCommande;
     }
+
+
 }
