@@ -43,6 +43,8 @@ public class CommandeService {
         commande.setDate(LocalDate.parse(dto.getDate()));
         commande.setNumeroCommande(genererNumeroCommande());
         commande.setObjet(dto.getObjet());
+        commande.setDateFiche(LocalDate.now()); // ✅ initialise une seule fois
+
 
 
         List<ProduitCommande> produits = dto.getProduits().stream()

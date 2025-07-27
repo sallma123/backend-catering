@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,6 +35,18 @@ public class PdfService {
 
         document.open();
 
+        // ✅ Afficher la date de création de la fiche depuis commande.getDateFiche()
+        String dateFiche = (commande.getDateFiche() != null)
+                ? new SimpleDateFormat("dd/MM/yyyy").format(java.sql.Date.valueOf(commande.getDateFiche()))
+                : "??/??/????";
+
+        Paragraph dateParagraph = new Paragraph("Rabat le : " + dateFiche,
+                FontFactory.getFont(FontFactory.HELVETICA, 11));
+        dateParagraph.setAlignment(Element.ALIGN_RIGHT);
+        document.add(dateParagraph);
+        document.add(new Paragraph(" "));
+
+        // ✅ Titre
         Paragraph title = new Paragraph(
                 "Fiche technique N° " + commande.getNumeroCommande(),
                 FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18)
@@ -42,18 +55,19 @@ public class PdfService {
         document.add(title);
         document.add(new Paragraph(" "));
 
-// ✅ Vérifie si c'est un client entreprise
+        // ✅ Objet (entreprise uniquement)
         if ("ENTREPRISE".equalsIgnoreCase(commande.getTypeClient().name())) {
             String objet = commande.getObjet();
             if (objet == null || objet.trim().isEmpty()) {
-                objet = commande.getTypeCommande().name(); // On utilise .name() car c’est un enum
+                objet = commande.getTypeCommande().name();
             }
-            Paragraph objetPara = new Paragraph("Objet : " + objet, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13));
+            Paragraph objetPara = new Paragraph("Objet : " + objet,
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13));
             objetPara.setSpacingAfter(10);
             document.add(objetPara);
         }
 
-
+        // ✅ Infos commande
         document.add(new Paragraph("Client : " + commande.getNomClient()));
         document.add(new Paragraph("Date : " + commande.getDate()));
         document.add(new Paragraph("Salle : " + commande.getSalle()));
@@ -62,14 +76,15 @@ public class PdfService {
         } else {
             document.add(new Paragraph("Nombre de tables : " + commande.getNombreTables()));
         }
-
         document.add(new Paragraph(" "));
 
+        // ✅ Produits par catégorie
         Map<String, List<ProduitCommande>> produitsParCategorie = produitsCoches.stream()
                 .collect(Collectors.groupingBy(ProduitCommande::getCategorie));
 
         for (String categorie : produitsParCategorie.keySet()) {
-            document.add(new Paragraph(categorie, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
+            document.add(new Paragraph(categorie,
+                    FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
             document.add(new Paragraph(" "));
 
             PdfPTable table = new PdfPTable(4);
@@ -82,7 +97,6 @@ public class PdfService {
             List<ProduitCommande> produits = produitsParCategorie.get(categorie);
 
             if (!categorie.equalsIgnoreCase("Supplément")) {
-                // ✅ Produits standards : 1 ligne par produit avec quantité = nombreTables
                 for (ProduitCommande produit : produits) {
                     table.addCell(produit.getNom());
                     table.addCell(String.valueOf(commande.getNombreTables()));
@@ -90,7 +104,6 @@ public class PdfService {
                     table.addCell("");
                 }
             } else {
-                // ✅ Suppléments : chaque ligne a sa propre quantité et PU
                 for (ProduitCommande produit : produits) {
                     int qte = produit.getQuantite() != null ? produit.getQuantite() : 1;
                     double total = produit.getPrix() * qte;
@@ -106,7 +119,7 @@ public class PdfService {
             document.add(new Paragraph(" "));
         }
 
-        // ✅ Total général
+        // ✅ Total
         double totalSuppl = produitsCoches.stream()
                 .filter(p -> p.getCategorie().equalsIgnoreCase("Supplément"))
                 .mapToDouble(p -> p.getPrix() * (p.getQuantite() != null ? p.getQuantite() : 1))

@@ -29,6 +29,9 @@ public class Commande {
     private double prixParTable;
     private double total; // calculé après sélection produits + prestataires
     private String objet;
+    @Column(name = "date_fiche")
+    private LocalDate dateFiche;
+
 
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProduitCommande> produits;
@@ -127,5 +130,12 @@ public class Commande {
     }
     public String getObjet() { return objet; }
     public void setObjet(String objet) { this.objet = objet; }
+    public LocalDate getDateFiche() {
+        return dateFiche;
+    }
+
+    public void setDateFiche(LocalDate dateFiche) {
+        this.dateFiche = dateFiche;
+    }
 
 }
