@@ -11,7 +11,7 @@ public class CommandeDTO {
     private String typeClient;
     private String typeCommande;
     private String statut;
-
+    private double total;
     private String nomClient;
     private String salle;
     private int nombreTables;
@@ -115,5 +115,12 @@ public class CommandeDTO {
 
     public void setObjet(String objet) {
         this.objet = objet;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+    public void setTotal(double total) {
+        this.total=total;
     }
 }
