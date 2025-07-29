@@ -2,6 +2,7 @@ package com.catering.backend.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -31,6 +32,8 @@ public class Commande {
     private String objet;
     @Column(name = "date_fiche")
     private LocalDate dateFiche;
+    @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Avance> avances = new ArrayList<>();
 
 
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -137,5 +140,16 @@ public class Commande {
     public void setDateFiche(LocalDate dateFiche) {
         this.dateFiche = dateFiche;
     }
+    public List<Avance> getAvances() {
+        return avances;
+    }
 
+    public void setAvances(List<Avance> avances) {
+        this.avances = avances;
+    }
+
+    public double getResteAPayer() {
+        double totalAvances = avances.stream().mapToDouble(Avance::getMontant).sum();
+        return total - totalAvances;
+    }
 }
