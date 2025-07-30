@@ -5,8 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
+
 public interface CommandeRepository extends JpaRepository<Commande, Long> {
 
-@Query("SELECT COUNT(c) FROM Commande c WHERE YEAR(c.date) = :annee")
-int countByYear(@Param("annee") int annee);
+    @Query("SELECT COUNT(c) FROM Commande c WHERE YEAR(c.date) = :annee")
+    int countByYear(@Param("annee") int annee);
+    boolean existsByDate(LocalDate date);
+
 }

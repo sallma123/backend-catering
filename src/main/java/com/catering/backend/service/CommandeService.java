@@ -11,6 +11,7 @@ import com.catering.backend.repository.CommandeRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -160,4 +161,16 @@ public class CommandeService {
 
         return commandeRepository.save(existing);
     }
+    public boolean existeCommandeLe(String dateString) {
+        try {
+            // 🔧 Supprimer les espaces et sauts de ligne
+            dateString = dateString.trim();
+            LocalDate date = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            return commandeRepository.existsByDate(date);
+        } catch (Exception e) {
+            throw new RuntimeException("Format de date invalide : " + dateString, e);
+        }
+    }
+
+
 }

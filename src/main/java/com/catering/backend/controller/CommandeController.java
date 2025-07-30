@@ -69,6 +69,10 @@ public class CommandeController {
     public Commande modifierCommande(@PathVariable Long id, @RequestBody CommandeDTO commandeDTO) {
         return commandeService.modifierCommande(id, commandeDTO);
     }
+    @GetMapping("/verifier-date")
+    public boolean verifierDisponibiliteDate(@RequestParam String date) {
+        return commandeService.existeCommandeLe(date);
+    }
 
 
 }
