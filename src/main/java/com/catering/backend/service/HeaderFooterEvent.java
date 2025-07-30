@@ -17,11 +17,11 @@ public class HeaderFooterEvent extends PdfPageEventHelper {
         try {
             if (new File(HEADER_IMAGE_PATH).exists()) {
                 header = Image.getInstance(HEADER_IMAGE_PATH);
-                header.scaleToFit(500, 100);
+                header.scaleToFit(PageSize.A4.getWidth(), 100); // pleine largeur
             }
             if (new File(FOOTER_IMAGE_PATH).exists()) {
                 footer = Image.getInstance(FOOTER_IMAGE_PATH);
-                footer.scaleToFit(500, 80);
+                footer.scaleToFit(PageSize.A4.getWidth(), 80); // pleine largeur
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -30,20 +30,21 @@ public class HeaderFooterEvent extends PdfPageEventHelper {
 
     @Override
     public void onEndPage(PdfWriter writer, Document document) {
-        PdfContentByte cb = writer.getDirectContent();
+        PdfContentByte cb = writer.getDirectContentUnder();
         try {
             if (header != null) {
-                header.setAbsolutePosition(
-                        (document.right() - document.left() - header.getScaledWidth()) / 2 + document.leftMargin(),
-                        document.top() + 50
-                );
+                // ✅ COLLER EN HAUT sans marge
+                float x = 0;
+                float y = PageSize.A4.getHeight() - header.getScaledHeight();
+                header.setAbsolutePosition(x, y);
                 cb.addImage(header);
             }
+
             if (footer != null) {
-                footer.setAbsolutePosition(
-                        (document.right() - document.left() - footer.getScaledWidth()) / 2 + document.leftMargin(),
-                        document.bottom() - 60
-                );
+                // ✅ COLLER EN BAS sans marge
+                float x = 0;
+                float y = 0;
+                footer.setAbsolutePosition(x, y);
                 cb.addImage(footer);
             }
         } catch (Exception e) {

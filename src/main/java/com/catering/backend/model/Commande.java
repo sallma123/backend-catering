@@ -26,7 +26,8 @@ public class Commande {
     private String salle;
     private int nombreTables;   // ou personnes selon le type
     private LocalDate date;
-
+    @Column(length = 1000)
+    private String commentaire;
     private double prixParTable;
     private double total; // calculé après sélection produits + prestataires
     private String objet;
@@ -152,4 +153,12 @@ public class Commande {
         double totalAvances = avances.stream().mapToDouble(Avance::getMontant).sum();
         return total - totalAvances;
     }
+    public String getCommentaire() {
+        return commentaire;
+    }
+
+    public void setCommentaire(String commentaire) {
+        this.commentaire = commentaire;
+    }
+
 }

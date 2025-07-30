@@ -43,6 +43,8 @@ public class CommandeService {
         commande.setDate(LocalDate.parse(dto.getDate()));
         commande.setNumeroCommande(genererNumeroCommande());
         commande.setObjet(dto.getObjet());
+        commande.setCommentaire(dto.getCommentaire());
+
 
         commande.setDateFiche(LocalDate.now()); // ✅ initialise une seule fois
 
@@ -100,8 +102,9 @@ public class CommandeService {
         dto.setTypeCommande(commande.getTypeCommande().name());
         dto.setObjet(commande.getObjet());
         dto.setTotal(commande.getTotal());
-        System.out.println("🧾 Total de la commande " + commande.getId() + ": " + commande.getTotal());
         dto.setTotal(commande.getTotal());
+        dto.setCommentaire(commande.getCommentaire());
+
 
 
         List<ProduitCommandeDTO> produitsDTO = commande.getProduits().stream().map(p -> {
@@ -129,6 +132,7 @@ public class CommandeService {
         existing.setStatut(StatutCommande.valueOf(dto.getStatut().toUpperCase()));
         existing.setDate(LocalDate.parse(dto.getDate()));
         existing.setObjet(dto.getObjet());
+        existing.setCommentaire(dto.getCommentaire());
 
 
         existing.getProduits().clear();

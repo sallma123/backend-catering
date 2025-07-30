@@ -19,6 +19,7 @@ public class CommandeDTO {
     private String objet;
     private String date;
     private List<ProduitCommandeDTO> produits;
+    private String commentaire;
 
     // --- Getters & Setters ---
     public Long getId() {
@@ -123,4 +124,13 @@ public class CommandeDTO {
     public void setTotal(double total) {
         this.total=total;
     }
+
+    public String getCommentaire() {
+        return commentaire;
+    }
+
+    public void setCommentaire(String commentaire) {
+        this.commentaire = commentaire;
+    }
+
 }
