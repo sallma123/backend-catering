@@ -21,7 +21,8 @@ public class HeaderFooterEvent extends PdfPageEventHelper {
             }
             if (new File(FOOTER_IMAGE_PATH).exists()) {
                 footer = Image.getInstance(FOOTER_IMAGE_PATH);
-                footer.scaleToFit(PageSize.A4.getWidth(), 80); // pleine largeur
+                footer.scaleAbsolute(PageSize.A4.getWidth(), 80); // ➤ largeur exacte
+                // pleine largeur
             }
         } catch (Exception e) {
             e.printStackTrace();
