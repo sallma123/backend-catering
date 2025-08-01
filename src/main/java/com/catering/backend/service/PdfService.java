@@ -72,28 +72,45 @@ public class PdfService {
         headerLine.addCell(rightCell);
         document.add(headerLine);
 
-        // ➤ Informations client
+// ➤ Ligne avec toutes les infos sur une seule ligne
+        Font calibri12 = getCalibriFont(12, Font.NORMAL);
         Font calibri11 = getCalibriFont(11, Font.NORMAL);
         Font calibri11Bold = getCalibriFont(11, Font.BOLD);
 
-        PdfPTable infoTable = new PdfPTable(2);
-        infoTable.setWidthPercentage(100);
-        infoTable.setWidths(new int[]{1, 1});
+        PdfPTable infoLine = new PdfPTable(4);
+        infoLine.setWidthPercentage(100);
+        infoLine.setWidths(new float[]{2.5f, 2.5f, 2.5f, 2.5f}); // 4 colonnes égales
 
-        PdfPCell left = new PdfPCell();
-        left.setBorder(Rectangle.NO_BORDER);
-        left.addElement(new Paragraph("Client : " + commande.getNomClient(), calibri11));
-        left.addElement(new Paragraph("Nbre de " + (commande.getTypeClient().name().equals("ENTREPRISE") ? "personnes" : "tables") + " : " + commande.getNombreTables(), calibri11));
+// Colonnes
+        PdfPCell cellClient = new PdfPCell(new Phrase("Client : " + commande.getNomClient(), calibri12));
+        PdfPCell cellNbr = new PdfPCell(new Phrase("Nbre de " +
+                (commande.getTypeClient().name().equals("ENTREPRISE") ? "personnes" : "tables") +
+                " : " + commande.getNombreTables(), calibri12));
+        PdfPCell cellDate = new PdfPCell(new Phrase("Date : " + commande.getDate(), calibri12));
+        PdfPCell cellSalle = new PdfPCell(new Phrase("Salle : " + commande.getSalle(), calibri12));
 
-        PdfPCell right = new PdfPCell();
-        right.setBorder(Rectangle.NO_BORDER);
-        right.addElement(new Paragraph("Date : " + commande.getDate(), calibri11));
-        right.addElement(new Paragraph("Salle : " + commande.getSalle(), calibri11));
+// Alignement
+        cellClient.setHorizontalAlignment(Element.ALIGN_LEFT);
+        cellNbr.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cellDate.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cellSalle.setHorizontalAlignment(Element.ALIGN_RIGHT);
 
-        infoTable.addCell(left);
-        infoTable.addCell(right);
-        document.add(infoTable);
+// Supprimer les bordures
+        for (PdfPCell cell : List.of(cellClient, cellNbr, cellDate, cellSalle)) {
+            cell.setBorder(Rectangle.NO_BORDER);
+        }
+
+// Ajout au tableau
+        infoLine.addCell(cellClient);
+        infoLine.addCell(cellNbr);
+        infoLine.addCell(cellDate);
+        infoLine.addCell(cellSalle);
+
+        document.add(infoLine);
+
+
         document.add(new Paragraph(" "));
+
 
         // ➤ Tableau principal
         PdfPTable table = new PdfPTable(4);
