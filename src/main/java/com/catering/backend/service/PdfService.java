@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,7 +46,6 @@ public class PdfService {
 
         document.open();
 
-        // ➤ Ligne avec Fiche technique N°... à gauche et Rabat le : ... à droite
         String dateFiche = (commande.getDateFiche() != null)
                 ? new SimpleDateFormat("dd/MM/yyyy").format(java.sql.Date.valueOf(commande.getDateFiche()))
                 : "??/??/????";
@@ -72,16 +72,15 @@ public class PdfService {
         headerLine.addCell(rightCell);
         document.add(headerLine);
 
-// ➤ Ligne avec toutes les infos sur une seule ligne
-        Font calibri12 = getCalibriFont(12, Font.NORMAL);
         Font calibri11 = getCalibriFont(11, Font.NORMAL);
         Font calibri11Bold = getCalibriFont(11, Font.BOLD);
 
         PdfPTable infoLine = new PdfPTable(4);
         infoLine.setWidthPercentage(100);
-        infoLine.setWidths(new float[]{2.5f, 2.5f, 2.5f, 2.5f}); // 4 colonnes égales
+        infoLine.setWidths(new float[]{3f, 3.3f, 3.3f, 3f});
 
-// Colonnes
+        Font calibri12 = getCalibriFont(12, Font.NORMAL);
+
         PdfPCell cellClient = new PdfPCell(new Phrase("Client : " + commande.getNomClient(), calibri12));
         PdfPCell cellNbr = new PdfPCell(new Phrase("Nbre de " +
                 (commande.getTypeClient().name().equals("ENTREPRISE") ? "personnes" : "tables") +
@@ -89,30 +88,23 @@ public class PdfService {
         PdfPCell cellDate = new PdfPCell(new Phrase("Date : " + commande.getDate(), calibri12));
         PdfPCell cellSalle = new PdfPCell(new Phrase("Salle : " + commande.getSalle(), calibri12));
 
-// Alignement
         cellClient.setHorizontalAlignment(Element.ALIGN_LEFT);
         cellNbr.setHorizontalAlignment(Element.ALIGN_CENTER);
         cellDate.setHorizontalAlignment(Element.ALIGN_CENTER);
         cellSalle.setHorizontalAlignment(Element.ALIGN_RIGHT);
 
-// Supprimer les bordures
         for (PdfPCell cell : List.of(cellClient, cellNbr, cellDate, cellSalle)) {
             cell.setBorder(Rectangle.NO_BORDER);
         }
 
-// Ajout au tableau
         infoLine.addCell(cellClient);
         infoLine.addCell(cellNbr);
         infoLine.addCell(cellDate);
         infoLine.addCell(cellSalle);
 
         document.add(infoLine);
-
-
         document.add(new Paragraph(" "));
 
-
-        // ➤ Tableau principal
         PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
         table.setWidths(new float[]{4, 1, 2, 2});
@@ -123,30 +115,48 @@ public class PdfService {
             table.addCell(headerCell);
         }
 
-        Map<String, List<ProduitCommande>> produitsParCategorie = produitsCoches.stream()
-                .collect(Collectors.groupingBy(ProduitCommande::getCategorie));
+        Map<String, List<ProduitCommande>> produitsParCategorie = new LinkedHashMap<>();
+        for (ProduitCommande produit : produitsCoches) {
+            produitsParCategorie.computeIfAbsent(produit.getCategorie(), k -> new java.util.ArrayList<>()).add(produit);
+        }
 
         double totalSuppl = 0;
 
-        for (String categorie : produitsParCategorie.keySet()) {
-            List<ProduitCommande> produits = produitsParCategorie.get(categorie);
+        for (Map.Entry<String, List<ProduitCommande>> entry : produitsParCategorie.entrySet()) {
+            String categorie = entry.getKey();
+            List<ProduitCommande> produits = entry.getValue();
 
-            // ➤ Ligne de titre de section
-            PdfPCell sectionDesignation = new PdfPCell(new Phrase(categorie + " :", getCalibriFont(12, Font.BOLD)));
-            PdfPCell sectionQte = new PdfPCell(new Phrase(""));
-            PdfPCell sectionPU = new PdfPCell(new Phrase(""));
-            PdfPCell sectionTotal = new PdfPCell(new Phrase(""));
+            boolean isSupplement = categorie.equalsIgnoreCase("Supplément");
 
-            table.addCell(sectionDesignation);
-            table.addCell(sectionQte);
-            table.addCell(sectionPU);
-            table.addCell(sectionTotal);
+            if (!isSupplement) {
+                PdfPCell sectionDesignation = new PdfPCell(new Phrase(categorie + " :", getCalibriFont(12, Font.BOLD)));
+                PdfPCell sectionQte = new PdfPCell();
+                PdfPCell sectionPU = new PdfPCell();
+                PdfPCell sectionTotal = new PdfPCell();
+
+                if (categorie.equalsIgnoreCase("Prestataires")) {
+                    sectionDesignation.setBorder(Rectangle.BOX);
+                    sectionQte.setBorder(Rectangle.BOX);
+                    sectionPU.setBorder(Rectangle.BOX);
+                    sectionTotal.setBorder(Rectangle.BOX);
+                } else {
+                    sectionDesignation.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                    sectionQte.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                    sectionPU.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                    sectionTotal.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                }
+
+                table.addCell(sectionDesignation);
+                table.addCell(sectionQte);
+                table.addCell(sectionPU);
+                table.addCell(sectionTotal);
+            }
 
             for (ProduitCommande produit : produits) {
                 PdfPCell cellDesignation = new PdfPCell(new Phrase(" ‐ " + produit.getNom(), calibri11));
-                PdfPCell cellQte = new PdfPCell(new Phrase("", calibri11));
-                PdfPCell cellPU = new PdfPCell(new Phrase("", calibri11));
-                PdfPCell cellTotal = new PdfPCell(new Phrase("", calibri11));
+                PdfPCell cellQte = new PdfPCell();
+                PdfPCell cellPU = new PdfPCell();
+                PdfPCell cellTotal = new PdfPCell();
 
                 if (categorie.equalsIgnoreCase("Supplément") ||
                         List.of("Matériel et Service", "Prestataires", "Pièce montée").contains(categorie)) {
@@ -161,6 +171,23 @@ public class PdfService {
                     totalSuppl += montant;
                 }
 
+                if (categorie.equalsIgnoreCase("Prestataires")) {
+                    cellDesignation.setBorder(Rectangle.BOX);
+                    cellQte.setBorder(Rectangle.BOX);
+                    cellPU.setBorder(Rectangle.BOX);
+                    cellTotal.setBorder(Rectangle.BOX);
+                } else if (categorie.equalsIgnoreCase("Supplément")) {
+                    cellDesignation.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
+                    cellQte.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
+                    cellPU.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
+                    cellTotal.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
+                }else {
+                    cellDesignation.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                    cellQte.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                    cellPU.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                    cellTotal.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                }
+
                 table.addCell(cellDesignation);
                 table.addCell(cellQte);
                 table.addCell(cellPU);
@@ -171,7 +198,6 @@ public class PdfService {
         document.add(table);
         document.add(new Paragraph(" "));
 
-        // ➤ Total
         double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalSuppl;
 
         Paragraph totalParag = new Paragraph("Total prestation : " + String.format("%.2f", totalGeneral) + " DH",
