@@ -120,6 +120,12 @@ public class PdfService {
             produitsParCategorie.computeIfAbsent(produit.getCategorie(), k -> new java.util.ArrayList<>()).add(produit);
         }
 
+        // Trouver la dernière catégorie normale (≠ Supplément)
+        String derniereCategorieNormale = produitsParCategorie.keySet().stream()
+                .filter(c -> !c.equalsIgnoreCase("Supplément"))
+                .reduce((first, second) -> second)
+                .orElse(null);
+
         double totalSuppl = 0;
 
         for (Map.Entry<String, List<ProduitCommande>> entry : produitsParCategorie.entrySet()) {
@@ -181,11 +187,17 @@ public class PdfService {
                     cellQte.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
                     cellPU.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
                     cellTotal.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
-                }else {
-                    cellDesignation.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
-                    cellQte.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
-                    cellPU.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
-                    cellTotal.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                } else {
+                    boolean isDernierProduit = categorie.equals(derniereCategorieNormale) &&
+                            produit.equals(produits.get(produits.size() - 1));
+                    int border = Rectangle.LEFT | Rectangle.RIGHT;
+                    if (isDernierProduit) {
+                        border |= Rectangle.BOTTOM;
+                    }
+                    cellDesignation.setBorder(border);
+                    cellQte.setBorder(border);
+                    cellPU.setBorder(border);
+                    cellTotal.setBorder(border);
                 }
 
                 table.addCell(cellDesignation);
