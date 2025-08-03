@@ -73,6 +73,9 @@ public class PdfService {
         headerLine.addCell(createCell("", calibri16, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
         headerLine.addCell(createCell("Rabat le : " + dateFiche, calibri16, Element.ALIGN_RIGHT, Rectangle.NO_BORDER));
         document.add(headerLine);
+        Paragraph space = new Paragraph();
+        space.setSpacingBefore(6f); // ou 10f, selon le rendu souhaité
+        document.add(space);
 
         PdfPTable infoLine = new PdfPTable(4);
         infoLine.setWidthPercentage(100);
@@ -81,14 +84,21 @@ public class PdfService {
         infoLine.addCell(createCell("Nbre de " +
                 (commande.getTypeClient().name().equals("ENTREPRISE") ? "personnes" : "tables") +
                 " : " + commande.getNombreTables(), calibri12Noir, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
-        infoLine.addCell(createCell("Date : " + commande.getDate(), calibri12Noir, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
+        String dateCommande = commande.getDate() != null
+                ? new SimpleDateFormat("dd/MM/yyyy").format(java.sql.Date.valueOf(commande.getDate()))
+                : "??/??/????";
+        infoLine.addCell(createCell("Date : " + dateCommande, calibri12Noir, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
+
         infoLine.addCell(createCell("Salle : " + commande.getSalle(), calibri12Noir, Element.ALIGN_RIGHT, Rectangle.NO_BORDER));
         document.add(infoLine);
-        document.add(new Paragraph(" "));
+
+        space.setSpacingBefore(13f); // ou 10f, selon le rendu souhaité
+        document.add(space);
+
 
         PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{4, 1, 2, 2});
+        table.setWidths(new float[]{5f, 1f, 1.3f, 1.8f});
         Color beige = new Color(221, 217, 195);
         String[] headers = {"Désignation", "Quantité", "PU (DH)", "Total"};
         for (String header : headers) {
@@ -97,8 +107,10 @@ public class PdfService {
             headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             headerCell.setBorder(Rectangle.BOX);
             headerCell.setBorderWidth(0.5f);
+            headerCell.setPaddingBottom(6f); // ← ajoute de l'espace en bas
             table.addCell(headerCell);
         }
+
 
         Map<String, List<ProduitCommande>> produitsParCategorie = new LinkedHashMap<>();
         for (ProduitCommande produit : produitsCoches) {
@@ -136,8 +148,8 @@ public class PdfService {
                         && produit.equals(produits.get(produits.size() - 1));
 
                 Paragraph para = new Paragraph("‐   " + produit.getNom(), calibri11);
-                para.setLeading(0, 1.2f); // interligne normal
-                para.setFirstLineIndent(0f);     // pas d'indentation pour la première ligne
+                para.setLeading(0, 0.9f); // interligne normal
+                para.setFirstLineIndent(1f);     // pas d'indentation pour la première ligne
                 para.setIndentationLeft(19f);    // indentation pour les lignes suivantes
 
                 PdfPCell cellDesignation = new PdfPCell();
@@ -204,6 +216,7 @@ public class PdfService {
                     for (PdfPCell c : List.of(cellDesignation, cellQte, cellPU, cellTotal)) {
                         c.setBorder(Rectangle.BOX);
                         c.setBorderWidth(0.5f);
+                        c.setPaddingBottom(6f);
                     }
 
                     table.addCell(cellDesignation);
