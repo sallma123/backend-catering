@@ -29,7 +29,6 @@ public class PdfService {
             BaseFont baseFont = BaseFont.createFont("src/main/resources/fonts/calibri.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
             return new Font(baseFont, size, style);
         } catch (Exception e) {
-            e.printStackTrace();
             return FontFactory.getFont(FontFactory.HELVETICA, size, style);
         }
     }
@@ -49,76 +48,45 @@ public class PdfService {
 
         document.open();
 
-        String dateFiche = (commande.getDateFiche() != null)
+        Font calibri16 = getCalibriFont(16, Font.NORMAL);
+        Font calibri11 = getCalibriFont(11, Font.NORMAL);
+        Font calibri11Bold = getCalibriFont(11, Font.BOLD);
+        Font calibri12 = getCalibriFont(12, Font.NORMAL);
+        Font calibri12Bold = getCalibriFont(12, Font.BOLD);
+
+        String dateFiche = commande.getDateFiche() != null
                 ? new SimpleDateFormat("dd/MM/yyyy").format(java.sql.Date.valueOf(commande.getDateFiche()))
                 : "??/??/????";
 
         PdfPTable headerLine = new PdfPTable(3);
         headerLine.setWidthPercentage(100);
         headerLine.setWidths(new float[]{4f, 1f, 4f});
-
-        Font calibri16 = getCalibriFont(16, Font.NORMAL);
-
-        PdfPCell leftCell = new PdfPCell(new Phrase("Fiche technique N° " + commande.getNumeroCommande(), calibri16));
-        leftCell.setHorizontalAlignment(Element.ALIGN_LEFT);
-        leftCell.setBorder(Rectangle.NO_BORDER);
-
-        PdfPCell spaceCell = new PdfPCell(new Phrase(""));
-        spaceCell.setBorder(Rectangle.NO_BORDER);
-
-        PdfPCell rightCell = new PdfPCell(new Phrase("Rabat le : " + dateFiche, calibri16));
-        rightCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        rightCell.setBorder(Rectangle.NO_BORDER);
-
-        headerLine.addCell(leftCell);
-        headerLine.addCell(spaceCell);
-        headerLine.addCell(rightCell);
+        headerLine.addCell(createCell("Fiche technique N° " + commande.getNumeroCommande(), calibri16, Element.ALIGN_LEFT, Rectangle.NO_BORDER));
+        headerLine.addCell(createCell("", calibri16, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
+        headerLine.addCell(createCell("Rabat le : " + dateFiche, calibri16, Element.ALIGN_RIGHT, Rectangle.NO_BORDER));
         document.add(headerLine);
-
-        Font calibri11 = getCalibriFont(11, Font.NORMAL);
-        Font calibri11Bold = getCalibriFont(11, Font.BOLD);
 
         PdfPTable infoLine = new PdfPTable(4);
         infoLine.setWidthPercentage(100);
         infoLine.setWidths(new float[]{3f, 3.3f, 3.3f, 3f});
-
-        Font calibri12 = getCalibriFont(12, Font.NORMAL);
-
-        PdfPCell cellClient = new PdfPCell(new Phrase("Client : " + commande.getNomClient(), calibri12));
-        PdfPCell cellNbr = new PdfPCell(new Phrase("Nbre de " +
+        infoLine.addCell(createCell("Client : " + commande.getNomClient(), calibri12, Element.ALIGN_LEFT, Rectangle.NO_BORDER));
+        infoLine.addCell(createCell("Nbre de " +
                 (commande.getTypeClient().name().equals("ENTREPRISE") ? "personnes" : "tables") +
-                " : " + commande.getNombreTables(), calibri12));
-        PdfPCell cellDate = new PdfPCell(new Phrase("Date : " + commande.getDate(), calibri12));
-        PdfPCell cellSalle = new PdfPCell(new Phrase("Salle : " + commande.getSalle(), calibri12));
-
-        cellClient.setHorizontalAlignment(Element.ALIGN_LEFT);
-        cellNbr.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cellDate.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cellSalle.setHorizontalAlignment(Element.ALIGN_RIGHT);
-
-        for (PdfPCell cell : List.of(cellClient, cellNbr, cellDate, cellSalle)) {
-            cell.setBorder(Rectangle.NO_BORDER);
-        }
-
-        infoLine.addCell(cellClient);
-        infoLine.addCell(cellNbr);
-        infoLine.addCell(cellDate);
-        infoLine.addCell(cellSalle);
-
+                " : " + commande.getNombreTables(), calibri12, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
+        infoLine.addCell(createCell("Date : " + commande.getDate(), calibri12, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
+        infoLine.addCell(createCell("Salle : " + commande.getSalle(), calibri12, Element.ALIGN_RIGHT, Rectangle.NO_BORDER));
         document.add(infoLine);
         document.add(new Paragraph(" "));
 
         PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
         table.setWidths(new float[]{4, 1, 2, 2});
-
         Color beige = new Color(221, 217, 195);
         String[] headers = {"Désignation", "Quantité", "PU (DH)", "Total"};
-        for (int i = 0; i < headers.length; i++) {
-            PdfPCell headerCell = new PdfPCell(new Phrase(headers[i], calibri11Bold));
+        for (String header : headers) {
+            PdfPCell headerCell = new PdfPCell(new Phrase(header, calibri11Bold));
             headerCell.setBackgroundColor(beige);
             headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-            headerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
             headerCell.setBorder(Rectangle.BOX);
             headerCell.setBorderWidth(0.5f);
             table.addCell(headerCell);
@@ -129,122 +97,132 @@ public class PdfService {
             produitsParCategorie.computeIfAbsent(produit.getCategorie(), k -> new java.util.ArrayList<>()).add(produit);
         }
 
-        String derniereCategorieNormale = produitsParCategorie.keySet().stream()
+        List<String> categoriesNormales = produitsParCategorie.keySet().stream()
                 .filter(c -> !c.equalsIgnoreCase("Supplément"))
-                .reduce((first, second) -> second)
-                .orElse(null);
-
-        double totalSuppl = 0;
-        int totalProduitsNormaux = produitsParCategorie.entrySet().stream()
-                .filter(e -> !e.getKey().equalsIgnoreCase("Supplément"))
-                .mapToInt(e -> e.getValue().size())
-                .sum();
-        int indexAffichageQte = totalProduitsNormaux / 2;
-        int currentIndex = 0;
+                .collect(Collectors.toList());
+        String derniereCategorieNormale = categoriesNormales.isEmpty() ? null : categoriesNormales.get(categoriesNormales.size() - 1);
 
         String valeurQuantiteGlobale = String.valueOf(commande.getNombreTables());
         String valeurPU = String.format("%.2f", commande.getPrixParTable());
         String valeurTotal = String.format("%.2f", commande.getNombreTables() * commande.getPrixParTable());
 
+        int totalNormaux = produitsParCategorie.entrySet().stream()
+                .filter(e -> !e.getKey().equalsIgnoreCase("Supplément"))
+                .mapToInt(e -> e.getValue().size()).sum();
+        int indexAffichage = totalNormaux / 2;
+        int index = 0;
+
+        // Sections normales (sans bordures horizontales)
         for (Map.Entry<String, List<ProduitCommande>> entry : produitsParCategorie.entrySet()) {
             String categorie = entry.getKey();
+            if (categorie.equalsIgnoreCase("Supplément")) continue;
+
+            table.addCell(sectionCell(categorie + " :", calibri12Bold));
+            table.addCell(sectionCell("", calibri12Bold));
+            table.addCell(sectionCell("", calibri12Bold));
+            table.addCell(sectionCell("", calibri12Bold));
+
             List<ProduitCommande> produits = entry.getValue();
-
-            boolean isSupplement = categorie.equalsIgnoreCase("Supplément");
-
-            if (!isSupplement) {
-                PdfPCell sectionDesignation = new PdfPCell(new Phrase(categorie + " :", getCalibriFont(12, Font.BOLD)));
-                PdfPCell sectionQte = new PdfPCell();
-                PdfPCell sectionPU = new PdfPCell();
-                PdfPCell sectionTotal = new PdfPCell();
-
-                int borderStyle = Rectangle.LEFT | Rectangle.RIGHT;
-                sectionDesignation.setBorder(borderStyle);
-                sectionQte.setBorder(borderStyle);
-                sectionPU.setBorder(borderStyle);
-                sectionTotal.setBorder(borderStyle);
-
-                table.addCell(sectionDesignation);
-                table.addCell(sectionQte);
-                table.addCell(sectionPU);
-                table.addCell(sectionTotal);
-            }
-
             for (ProduitCommande produit : produits) {
+                boolean lastOfLast = categorie.equals(derniereCategorieNormale)
+                        && produit.equals(produits.get(produits.size() - 1));
+
                 PdfPCell cellDesignation = new PdfPCell(new Phrase(" ‐ " + produit.getNom(), calibri11));
-                PdfPCell cellQte;
+                PdfPCell cellQte = new PdfPCell();
                 PdfPCell cellPU = new PdfPCell();
                 PdfPCell cellTotal = new PdfPCell();
 
-                if (!isSupplement) {
-                    if (currentIndex == indexAffichageQte) {
-                        cellQte = new PdfPCell(new Phrase(valeurQuantiteGlobale, calibri11));
-                        cellQte.setHorizontalAlignment(Element.ALIGN_CENTER);
-                        cellPU.setPhrase(new Phrase(valeurPU, calibri11));
-                        cellPU.setHorizontalAlignment(Element.ALIGN_CENTER);
-                        cellTotal.setPhrase(new Phrase(valeurTotal, calibri11));
-                        cellTotal.setHorizontalAlignment(Element.ALIGN_CENTER);
-                    } else {
-                        cellQte = new PdfPCell(new Phrase(""));
-                        cellPU = new PdfPCell(new Phrase(""));
-                        cellTotal = new PdfPCell(new Phrase(""));
-                    }
-                } else {
-                    int quantite = produit.getQuantite() != null ? produit.getQuantite() : 1;
-                    double prix = produit.getPrix();
-                    double montant = quantite * prix;
-
-                    cellQte = new PdfPCell(new Phrase(String.valueOf(quantite), calibri11));
-                    cellPU = new PdfPCell(new Phrase(String.format("%.2f", prix), calibri11));
-                    cellTotal = new PdfPCell(new Phrase(String.format("%.2f", montant), calibri11));
-
+                if (index == indexAffichage) {
+                    cellQte.setPhrase(new Phrase(valeurQuantiteGlobale, calibri11));
+                    cellPU.setPhrase(new Phrase(valeurPU, calibri11));
+                    cellTotal.setPhrase(new Phrase(valeurTotal, calibri11));
                     cellQte.setHorizontalAlignment(Element.ALIGN_CENTER);
                     cellPU.setHorizontalAlignment(Element.ALIGN_CENTER);
                     cellTotal.setHorizontalAlignment(Element.ALIGN_CENTER);
-
-                    totalSuppl += montant;
                 }
 
-                int border = Rectangle.LEFT | Rectangle.RIGHT;
-                if (isSupplement || (categorie.equals(derniereCategorieNormale) && produit.equals(produits.get(produits.size() - 1)))) {
-                    border |= Rectangle.BOTTOM;
+                for (PdfPCell c : List.of(cellDesignation, cellQte, cellPU, cellTotal)) {
+                    c.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+                    c.setBorderWidth(0.5f);
                 }
-
-                cellDesignation.setBorder(border);
-                cellQte.setBorder(border);
-                cellPU.setBorder(border);
-                cellTotal.setBorder(border);
-
-                cellDesignation.setBorderWidth(0.5f);
-                cellQte.setBorderWidth(0.5f);
-                cellPU.setBorderWidth(0.5f);
-                cellTotal.setBorderWidth(0.5f);
 
                 table.addCell(cellDesignation);
                 table.addCell(cellQte);
                 table.addCell(cellPU);
                 table.addCell(cellTotal);
-
-                if (!isSupplement) {
-                    currentIndex++;
-                }
+                index++;
             }
         }
+
+        // Matériel et Service (bordure dessous)
+        PdfPCell msCell1 = new PdfPCell(new Phrase("Matériel et Service", calibri12Bold));
+        PdfPCell msCell2 = new PdfPCell();
+        PdfPCell msCell3 = new PdfPCell();
+        PdfPCell msCell4 = new PdfPCell();
+
+        for (PdfPCell cell : List.of(msCell1, msCell2, msCell3, msCell4)) {
+            cell.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
+            cell.setBorderWidth(0.5f);
+        }
+
+        table.addCell(msCell1);
+        table.addCell(msCell2);
+        table.addCell(msCell3);
+        table.addCell(msCell4);
+
+
+        // Produits de Supplément (avec bordure complète)
+        produitsParCategorie.entrySet().stream()
+                .filter(e -> e.getKey().equalsIgnoreCase("Supplément"))
+                .flatMap(e -> e.getValue().stream())
+                .forEach(produit -> {
+                    PdfPCell cellDesignation = new PdfPCell(new Phrase(" ‐ " + produit.getNom(), calibri11));
+                    PdfPCell cellQte = new PdfPCell(new Phrase(String.valueOf(produit.getQuantite()), calibri11));
+                    PdfPCell cellPU = new PdfPCell(new Phrase(String.format("%.2f", produit.getPrix()), calibri11));
+                    double montant = produit.getPrix() * (produit.getQuantite() != null ? produit.getQuantite() : 1);
+                    PdfPCell cellTotal = new PdfPCell(new Phrase(String.format("%.2f", montant), calibri11));
+
+                    for (PdfPCell c : List.of(cellQte, cellPU, cellTotal)) {
+                        c.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    }
+
+                    for (PdfPCell c : List.of(cellDesignation, cellQte, cellPU, cellTotal)) {
+                        c.setBorder(Rectangle.BOX);
+                        c.setBorderWidth(0.5f);
+                    }
+
+                    table.addCell(cellDesignation);
+                    table.addCell(cellQte);
+                    table.addCell(cellPU);
+                    table.addCell(cellTotal);
+                });
 
         document.add(table);
         document.add(new Paragraph(" "));
 
-        double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalSuppl;
+        double totalSuppl = produitsParCategorie.getOrDefault("Supplément", List.of()).stream()
+                .mapToDouble(p -> p.getPrix() * (p.getQuantite() != null ? p.getQuantite() : 1)).sum();
 
-        Paragraph totalParag = new Paragraph("Total prestation : " + String.format("%.2f", totalGeneral) + " DH",
-                getCalibriFont(13, Font.BOLD));
+        double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalSuppl;
+        Paragraph totalParag = new Paragraph("Total prestation : " + String.format("%.2f", totalGeneral) + " DH", getCalibriFont(13, Font.BOLD));
         totalParag.setAlignment(Element.ALIGN_CENTER);
         document.add(totalParag);
-        document.add(new Paragraph(" "));
-
         document.close();
         writer.close();
-
         return out.toByteArray();
+    }
+
+    private PdfPCell createCell(String text, Font font, int align, int border) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setHorizontalAlignment(align);
+        cell.setBorder(border);
+        return cell;
+    }
+
+    private PdfPCell sectionCell(String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBorder(Rectangle.LEFT | Rectangle.RIGHT);
+        cell.setBorderWidth(0.5f);
+        return cell;
     }
 }
