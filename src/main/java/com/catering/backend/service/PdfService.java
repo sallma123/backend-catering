@@ -53,6 +53,14 @@ public class PdfService {
         Font calibri11Bold = getCalibriFont(11, Font.BOLD);
         Font calibri12 = getCalibriFont(12, Font.NORMAL);
         Font calibri12Bold = getCalibriFont(12, Font.BOLD);
+        Font calibri12Noir = getCalibriFont(12, Font.NORMAL); // Police noire
+        calibri12Noir.setColor(Color.BLACK);
+
+        Color customColor = new Color(18, 63, 76);
+        calibri11.setColor(customColor);
+        calibri11Bold.setColor(customColor);
+        calibri12.setColor(customColor);
+        calibri12Bold.setColor(customColor);
 
         String dateFiche = commande.getDateFiche() != null
                 ? new SimpleDateFormat("dd/MM/yyyy").format(java.sql.Date.valueOf(commande.getDateFiche()))
@@ -69,12 +77,12 @@ public class PdfService {
         PdfPTable infoLine = new PdfPTable(4);
         infoLine.setWidthPercentage(100);
         infoLine.setWidths(new float[]{3f, 3.3f, 3.3f, 3f});
-        infoLine.addCell(createCell("Client : " + commande.getNomClient(), calibri12, Element.ALIGN_LEFT, Rectangle.NO_BORDER));
+        infoLine.addCell(createCell("Client : " + commande.getNomClient(), calibri12Noir, Element.ALIGN_LEFT, Rectangle.NO_BORDER));
         infoLine.addCell(createCell("Nbre de " +
                 (commande.getTypeClient().name().equals("ENTREPRISE") ? "personnes" : "tables") +
-                " : " + commande.getNombreTables(), calibri12, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
-        infoLine.addCell(createCell("Date : " + commande.getDate(), calibri12, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
-        infoLine.addCell(createCell("Salle : " + commande.getSalle(), calibri12, Element.ALIGN_RIGHT, Rectangle.NO_BORDER));
+                " : " + commande.getNombreTables(), calibri12Noir, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
+        infoLine.addCell(createCell("Date : " + commande.getDate(), calibri12Noir, Element.ALIGN_CENTER, Rectangle.NO_BORDER));
+        infoLine.addCell(createCell("Salle : " + commande.getSalle(), calibri12Noir, Element.ALIGN_RIGHT, Rectangle.NO_BORDER));
         document.add(infoLine);
         document.add(new Paragraph(" "));
 
@@ -84,7 +92,7 @@ public class PdfService {
         Color beige = new Color(221, 217, 195);
         String[] headers = {"Désignation", "Quantité", "PU (DH)", "Total"};
         for (String header : headers) {
-            PdfPCell headerCell = new PdfPCell(new Phrase(header, calibri11Bold));
+            PdfPCell headerCell = new PdfPCell(new Phrase(header, calibri12));
             headerCell.setBackgroundColor(beige);
             headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             headerCell.setBorder(Rectangle.BOX);
@@ -133,9 +141,9 @@ public class PdfService {
                 PdfPCell cellTotal = new PdfPCell();
 
                 if (index == indexAffichage) {
-                    cellQte.setPhrase(new Phrase(valeurQuantiteGlobale, calibri11));
-                    cellPU.setPhrase(new Phrase(valeurPU, calibri11));
-                    cellTotal.setPhrase(new Phrase(valeurTotal, calibri11));
+                    cellQte.setPhrase(new Phrase(valeurQuantiteGlobale, calibri12Noir));
+                    cellPU.setPhrase(new Phrase(valeurPU, calibri12Noir));
+                    cellTotal.setPhrase(new Phrase(valeurTotal, calibri12Noir));
                     cellQte.setHorizontalAlignment(Element.ALIGN_CENTER);
                     cellPU.setHorizontalAlignment(Element.ALIGN_CENTER);
                     cellTotal.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -177,10 +185,10 @@ public class PdfService {
                 .flatMap(e -> e.getValue().stream())
                 .forEach(produit -> {
                     PdfPCell cellDesignation = new PdfPCell(new Phrase(" ‐ " + produit.getNom(), calibri11));
-                    PdfPCell cellQte = new PdfPCell(new Phrase(String.valueOf(produit.getQuantite()), calibri11));
-                    PdfPCell cellPU = new PdfPCell(new Phrase(String.format("%.2f", produit.getPrix()), calibri11));
+                    PdfPCell cellQte = new PdfPCell(new Phrase(String.valueOf(produit.getQuantite()), calibri12Noir));
+                    PdfPCell cellPU = new PdfPCell(new Phrase(String.format("%.2f", produit.getPrix()), calibri12Noir));
                     double montant = produit.getPrix() * (produit.getQuantite() != null ? produit.getQuantite() : 1);
-                    PdfPCell cellTotal = new PdfPCell(new Phrase(String.format("%.2f", montant), calibri11));
+                    PdfPCell cellTotal = new PdfPCell(new Phrase(String.format("%.2f", montant), calibri12Noir));
 
                     for (PdfPCell c : List.of(cellQte, cellPU, cellTotal)) {
                         c.setHorizontalAlignment(Element.ALIGN_CENTER);
