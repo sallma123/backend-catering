@@ -135,7 +135,7 @@ public class PdfService {
                 boolean lastOfLast = categorie.equals(derniereCategorieNormale)
                         && produit.equals(produits.get(produits.size() - 1));
 
-                PdfPCell cellDesignation = new PdfPCell(new Phrase(" ‐ " + produit.getNom(), calibri11));
+                PdfPCell cellDesignation = new PdfPCell(new Phrase("      ‐    " + produit.getNom(), calibri11));
                 PdfPCell cellQte = new PdfPCell();
                 PdfPCell cellPU = new PdfPCell();
                 PdfPCell cellTotal = new PdfPCell();
@@ -184,7 +184,7 @@ public class PdfService {
                 .filter(e -> e.getKey().equalsIgnoreCase("Supplément"))
                 .flatMap(e -> e.getValue().stream())
                 .forEach(produit -> {
-                    PdfPCell cellDesignation = new PdfPCell(new Phrase(" ‐ " + produit.getNom(), calibri11));
+                    PdfPCell cellDesignation = new PdfPCell(new Phrase(produit.getNom(), calibri12Bold));
                     PdfPCell cellQte = new PdfPCell(new Phrase(String.valueOf(produit.getQuantite()), calibri12Noir));
                     PdfPCell cellPU = new PdfPCell(new Phrase(String.format("%.2f", produit.getPrix()), calibri12Noir));
                     double montant = produit.getPrix() * (produit.getQuantite() != null ? produit.getQuantite() : 1);
