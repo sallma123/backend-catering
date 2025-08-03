@@ -135,7 +135,14 @@ public class PdfService {
                 boolean lastOfLast = categorie.equals(derniereCategorieNormale)
                         && produit.equals(produits.get(produits.size() - 1));
 
-                PdfPCell cellDesignation = new PdfPCell(new Phrase("      ‐    " + produit.getNom(), calibri11));
+                Paragraph para = new Paragraph("‐   " + produit.getNom(), calibri11);
+                para.setLeading(0, 1.2f); // interligne normal
+                para.setFirstLineIndent(0f);     // pas d'indentation pour la première ligne
+                para.setIndentationLeft(19f);    // indentation pour les lignes suivantes
+
+                PdfPCell cellDesignation = new PdfPCell();
+                cellDesignation.addElement(para);
+
                 PdfPCell cellQte = new PdfPCell();
                 PdfPCell cellPU = new PdfPCell();
                 PdfPCell cellTotal = new PdfPCell();
