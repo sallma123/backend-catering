@@ -225,16 +225,44 @@ public class PdfService {
                     table.addCell(cellTotal);
                 });
 
-        document.add(table);
         document.add(new Paragraph(" "));
 
         double totalSuppl = produitsParCategorie.getOrDefault("Supplément", List.of()).stream()
                 .mapToDouble(p -> p.getPrix() * (p.getQuantite() != null ? p.getQuantite() : 1)).sum();
 
         double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalSuppl;
-        Paragraph totalParag = new Paragraph("Total prestation : " + String.format("%.2f", totalGeneral) + " DH", getCalibriFont(13, Font.BOLD));
-        totalParag.setAlignment(Element.ALIGN_CENTER);
-        document.add(totalParag);
+// Ligne Total finale
+        PdfPCell totalLabelCell = new PdfPCell(new Phrase("Total", calibri12Bold));
+        PdfPCell emptyCell1 = new PdfPCell(); // Quantité
+        PdfPCell emptyCell2 = new PdfPCell(); // PU
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalGeneral), calibri12Noir));
+
+// Alignements
+        totalLabelCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        totalLabelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        totalValueCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        for (PdfPCell c : List.of(totalLabelCell, emptyCell1, emptyCell2, totalValueCell)) {
+            c.setPaddingBottom(5f); // ou la valeur qui te convient
+        }
+
+// Bordures demandées
+        totalLabelCell.setBorder(Rectangle.LEFT | Rectangle.BOTTOM);           // Gauche et bas
+        emptyCell1.setBorder(Rectangle.BOTTOM);                                // Bas seulement
+        emptyCell2.setBorder(Rectangle.RIGHT | Rectangle.BOTTOM);                              // Bas seulement
+        totalValueCell.setBorder(Rectangle.RIGHT | Rectangle.BOTTOM);          // Droite et bas
+
+// Bordures fines
+        for (PdfPCell c : List.of(totalLabelCell, emptyCell1, emptyCell2, totalValueCell)) {
+            c.setBorderWidth(0.5f);
+        }
+
+// Ajout au tableau
+        table.addCell(totalLabelCell);
+        table.addCell(emptyCell1);
+        table.addCell(emptyCell2);
+        table.addCell(totalValueCell);
+
+        document.add(table);
         document.close();
         writer.close();
         return out.toByteArray();
