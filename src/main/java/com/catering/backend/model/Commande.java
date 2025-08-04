@@ -20,6 +20,7 @@ public class Commande {
     private TypeCommande typeCommande;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private StatutCommande statut;
 
     private String nomClient;
