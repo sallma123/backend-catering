@@ -32,10 +32,10 @@ public class PdfService {
             return FontFactory.getFont(FontFactory.HELVETICA, size, style);
         }
     }
-
     public byte[] genererFicheCommande(Long commandeId) throws Exception {
         Commande commande = commandeRepository.findById(commandeId)
                 .orElseThrow(() -> new Exception("Commande introuvable"));
+        boolean masquerPrix = "PARTENAIRE".equalsIgnoreCase(commande.getTypeClient().name());
 
         List<ProduitCommande> produitsCoches = commande.getProduits().stream()
                 .filter(ProduitCommande::isSelectionne)
@@ -157,8 +157,8 @@ public class PdfService {
 
                 if (index == indexAffichage) {
                     cellQte.setPhrase(new Phrase(valeurQuantiteGlobale, calibri12Noir));
-                    cellPU.setPhrase(new Phrase(valeurPU, calibri12Noir));
-                    cellTotal.setPhrase(new Phrase(valeurTotal, calibri12Noir));
+                    cellPU.setPhrase(new Phrase(masquerPrix ? "" : valeurPU, calibri12Noir));
+                    cellTotal.setPhrase(new Phrase(masquerPrix ? "" : valeurTotal, calibri12Noir));
                     cellQte.setHorizontalAlignment(Element.ALIGN_CENTER);
                     cellPU.setHorizontalAlignment(Element.ALIGN_CENTER);
                     cellTotal.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -201,9 +201,9 @@ public class PdfService {
                 .forEach(produit -> {
                     PdfPCell cellDesignation = new PdfPCell(new Phrase(produit.getNom(), calibri12Bold));
                     PdfPCell cellQte = new PdfPCell(new Phrase(String.valueOf(produit.getQuantite()), calibri12Noir));
-                    PdfPCell cellPU = new PdfPCell(new Phrase(String.format("%.2f", produit.getPrix()), calibri12Noir));
+                    PdfPCell cellPU = new PdfPCell(new Phrase(masquerPrix ? "" : String.format("%.2f", produit.getPrix()), calibri12Noir));
                     double montant = produit.getPrix() * (produit.getQuantite() != null ? produit.getQuantite() : 1);
-                    PdfPCell cellTotal = new PdfPCell(new Phrase(String.format("%.2f", montant), calibri12Noir));
+                    PdfPCell cellTotal = new PdfPCell(new Phrase(masquerPrix ? "" : String.format("%.2f", montant), calibri12Noir));
 
                     for (PdfPCell c : List.of(cellQte, cellPU, cellTotal)) {
                         c.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -237,7 +237,7 @@ public class PdfService {
         totalLabelCell.setBorderWidth(0.5f);
 
 // Cellule valeur total
-        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalGeneral), calibri12Noir));
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(masquerPrix ? "" : String.format("%.2f", totalGeneral), calibri12Noir));
         totalValueCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         totalValueCell.setPaddingBottom(5f);
         totalValueCell.setBorder(Rectangle.RIGHT | Rectangle.BOTTOM);
