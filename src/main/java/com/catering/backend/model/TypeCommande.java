@@ -8,5 +8,8 @@ public enum TypeCommande {
     ANNIVERSAIRE,
     SOUTENANCE,
     BUFFET_DE_SOUTENANCE,
-    SÉMINAIRE
+    SEMINAIRE,
+    FTOUR_RAMADAN,
+    FIANCAILLES,
+    HENNA
 }
