@@ -92,10 +92,6 @@ public class PdfService {
         infoLine.addCell(createCell("Salle : " + commande.getSalle(), calibri12Noir, Element.ALIGN_RIGHT, Rectangle.NO_BORDER));
         document.add(infoLine);
 
-        space.setSpacingBefore(13f); // ou 10f, selon le rendu souhaité
-        document.add(space);
-
-
         PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
         table.setWidths(new float[]{5f, 1f, 1.3f, 1.8f});
@@ -231,36 +227,26 @@ public class PdfService {
                 .mapToDouble(p -> p.getPrix() * (p.getQuantite() != null ? p.getQuantite() : 1)).sum();
 
         double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalSuppl;
-// Ligne Total finale
+// Ligne Total finale fusionnée (colspan=3)
         PdfPCell totalLabelCell = new PdfPCell(new Phrase("Total", calibri12Bold));
-        PdfPCell emptyCell1 = new PdfPCell(); // Quantité
-        PdfPCell emptyCell2 = new PdfPCell(); // PU
-        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalGeneral), calibri12Noir));
-
-// Alignements
+        totalLabelCell.setColspan(3); // Fusionne Désignation + Quantité + PU
         totalLabelCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         totalLabelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        totalLabelCell.setPaddingBottom(5f);
+        totalLabelCell.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
+        totalLabelCell.setBorderWidth(0.5f);
+
+// Cellule valeur total
+        PdfPCell totalValueCell = new PdfPCell(new Phrase(String.format("%.2f", totalGeneral), calibri12Noir));
         totalValueCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        for (PdfPCell c : List.of(totalLabelCell, emptyCell1, emptyCell2, totalValueCell)) {
-            c.setPaddingBottom(5f); // ou la valeur qui te convient
-        }
-
-// Bordures demandées
-        totalLabelCell.setBorder(Rectangle.LEFT | Rectangle.BOTTOM);           // Gauche et bas
-        emptyCell1.setBorder(Rectangle.BOTTOM);                                // Bas seulement
-        emptyCell2.setBorder(Rectangle.RIGHT | Rectangle.BOTTOM);                              // Bas seulement
-        totalValueCell.setBorder(Rectangle.RIGHT | Rectangle.BOTTOM);          // Droite et bas
-
-// Bordures fines
-        for (PdfPCell c : List.of(totalLabelCell, emptyCell1, emptyCell2, totalValueCell)) {
-            c.setBorderWidth(0.5f);
-        }
+        totalValueCell.setPaddingBottom(5f);
+        totalValueCell.setBorder(Rectangle.RIGHT | Rectangle.BOTTOM);
+        totalValueCell.setBorderWidth(0.5f);
 
 // Ajout au tableau
-        table.addCell(totalLabelCell);
-        table.addCell(emptyCell1);
-        table.addCell(emptyCell2);
-        table.addCell(totalValueCell);
+        table.addCell(totalLabelCell); // Colspan 3 colonnes
+        table.addCell(totalValueCell); // Dernière colonne
+
 
         document.add(table);
         document.close();
