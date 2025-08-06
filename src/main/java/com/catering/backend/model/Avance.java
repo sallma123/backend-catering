@@ -1,5 +1,6 @@
 package com.catering.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -16,6 +17,7 @@ public class Avance {
 
     @ManyToOne
     @JoinColumn(name = "commande_id")
+    @JsonIgnore // 🔥 Empêche l'inclusion dans la réponse JSON
     private Commande commande;
 
     // ✅ Getters et Setters
