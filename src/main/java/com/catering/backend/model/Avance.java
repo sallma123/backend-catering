@@ -17,7 +17,7 @@ public class Avance {
 
     @ManyToOne
     @JoinColumn(name = "commande_id")
-    @JsonIgnore // 🔥 Empêche l'inclusion dans la réponse JSON
+    @JsonIgnore //Empêche l'inclusion dans la réponse JSON
     private Commande commande;
 
     // ✅ Getters et Setters
