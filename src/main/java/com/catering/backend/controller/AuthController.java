@@ -61,4 +61,30 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Collections.singletonMap("message", "Utilisateur créé avec succès"));
     }
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestParam String email,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword
+    ) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.badRequest().body("Utilisateur non trouvé");
+        }
+
+        User user = userOptional.get();
+
+        // ✅ Vérifie le mot de passe actuel avec hash
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            return ResponseEntity.badRequest().body("Ancien mot de passe incorrect");
+        }
+
+        // ✅ Encode le nouveau mot de passe avant de le sauvegarder
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Mot de passe modifié avec succès");
+    }
+
 }
