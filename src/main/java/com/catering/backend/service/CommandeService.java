@@ -14,6 +14,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CommandeService {
@@ -105,7 +107,7 @@ public class CommandeService {
         dto.setTotal(commande.getTotal());
         dto.setTotal(commande.getTotal());
         dto.setCommentaire(commande.getCommentaire());
-
+        dto.setCorbeille(commande.isCorbeille());
 
 
         List<ProduitCommandeDTO> produitsDTO = commande.getProduits().stream().map(p -> {
@@ -172,5 +174,32 @@ public class CommandeService {
         }
     }
 
+    public void mettreEnCorbeille(Long id) {
+        Commande commande = getCommandeById(id);
+        commande.setCorbeille(true);
+        commande.setDateSuppression(LocalDate.now());
+        commandeRepository.save(commande);
+    }
+
+    public void restaurerCommande(Long id) {
+        Commande commande = getCommandeById(id);
+        commande.setCorbeille(false);
+        commande.setDateSuppression(null);
+        commandeRepository.save(commande);
+    }
+
+    @Scheduled(cron = "0 0 2 * * *") // chaque jour à 2h
+    @Transactional
+    public void supprimerCommandesAnciennes() {
+        LocalDate limite = LocalDate.now().minusDays(30);
+        List<Commande> anciennes = commandeRepository.findByCorbeilleTrueAndDateSuppressionBefore(limite);
+        commandeRepository.deleteAll(anciennes);
+    }
+    public List<CommandeDTO> getCommandesDansCorbeille() {
+        return commandeRepository.findAll().stream()
+                .filter(Commande::isCorbeille)  // ✅ méthode getter correcte
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
 
 }

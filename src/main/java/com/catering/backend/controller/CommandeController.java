@@ -8,8 +8,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -44,13 +46,6 @@ public class CommandeController {
         return commandeService.toDTO(commandeService.getCommandeById(id));
     }
 
-
-    // ✅ Supprimer une commande
-    @DeleteMapping("/{id}")
-    public void deleteCommande(@PathVariable Long id) {
-        commandeService.supprimerCommande(id);
-    }
-
     // ✅ Télécharger la fiche PDF
     @GetMapping("/{id}/fiche")
     public ResponseEntity<byte[]> genererFiche(@PathVariable Long id) {
@@ -72,6 +67,27 @@ public class CommandeController {
     @GetMapping("/verifier-date")
     public boolean verifierDisponibiliteDate(@RequestParam String date) {
         return commandeService.existeCommandeLe(date);
+    }
+    @PutMapping("/{id}/corbeille")
+    public ResponseEntity<?> mettreEnCorbeille(@PathVariable Long id) {
+        commandeService.mettreEnCorbeille(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{id}/restaurer")
+    public ResponseEntity<?> restaurerCommande(@PathVariable Long id) {
+        commandeService.restaurerCommande(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> supprimerDefinitivement(@PathVariable Long id) {
+        commandeService.supprimerCommande(id);
+        return ResponseEntity.ok().build();
+    }
+    @GetMapping("/corbeille")
+    public List<CommandeDTO> getCommandesDansCorbeille() {
+        return commandeService.getCommandesDansCorbeille();
     }
 
 

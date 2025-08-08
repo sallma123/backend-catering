@@ -20,6 +20,7 @@ public class CommandeDTO {
     private String date;
     private List<ProduitCommandeDTO> produits;
     private String commentaire;
+    private Boolean corbeille;
 
     // --- Getters & Setters ---
     public Long getId() {
@@ -131,6 +132,13 @@ public class CommandeDTO {
 
     public void setCommentaire(String commentaire) {
         this.commentaire = commentaire;
+    }
+    public Boolean getCorbeille() {
+        return corbeille;
+    }
+
+    public void setCorbeille(Boolean corbeille) {
+        this.corbeille = corbeille;
     }
 
 }

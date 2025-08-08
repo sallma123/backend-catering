@@ -1,5 +1,6 @@
 package com.catering.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -40,6 +41,11 @@ public class Commande {
 
     @OneToMany(mappedBy = "commande", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProduitCommande> produits;
+
+    private boolean corbeille = false;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dateSuppression; // Date à laquelle elle est mise à la corbeille
 
     // --- Getters et Setters ---
 
@@ -160,6 +166,22 @@ public class Commande {
 
     public void setCommentaire(String commentaire) {
         this.commentaire = commentaire;
+    }
+
+    public boolean isCorbeille() {
+        return corbeille;
+    }
+
+    public void setCorbeille(boolean corbeille) {
+        this.corbeille = corbeille;
+    }
+
+    public LocalDate getDateSuppression() {
+        return dateSuppression;
+    }
+
+    public void setDateSuppression(LocalDate dateSuppression) {
+        this.dateSuppression = dateSuppression;
     }
 
 }
