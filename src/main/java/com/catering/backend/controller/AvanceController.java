@@ -24,4 +24,9 @@ public class AvanceController {
     public List<AvanceDTO> getAvances(@PathVariable Long commandeId) {
         return avanceService.getAvancesByCommande(commandeId);
     }
+    @DeleteMapping("/{commandeId}/avances/{avanceId}")
+    public void supprimerAvance(@PathVariable Long commandeId, @PathVariable Long avanceId) {
+        avanceService.supprimerAvance(commandeId, avanceId);
+    }
+
 }

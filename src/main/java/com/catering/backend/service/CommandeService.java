@@ -28,9 +28,22 @@ public class CommandeService {
 
     public String genererNumeroCommande() {
         int anneeActuelle = LocalDate.now().getYear();
-        int count = commandeRepository.countByYear(anneeActuelle);
-        int numeroIncremental = count + 1;
-        return numeroIncremental + "/" + anneeActuelle;
+
+        String maxNumero = commandeRepository.findMaxNumeroByYear(anneeActuelle);
+
+        int prochainNumero = 1;
+        if (maxNumero != null) {
+            try {
+                // extrait la partie avant "/"
+                int dernier = Integer.parseInt(maxNumero.split("/")[0]);
+                prochainNumero = dernier + 1;
+            } catch (Exception e) {
+                // si parsing échoue, on revient à 1
+                prochainNumero = 1;
+            }
+        }
+
+        return prochainNumero + "/" + anneeActuelle;
     }
 
     public Commande creerCommande(CommandeDTO dto) {

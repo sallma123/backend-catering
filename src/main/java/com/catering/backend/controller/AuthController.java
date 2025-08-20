@@ -117,7 +117,7 @@ public class AuthController {
         tokenRepository.save(resetToken);
 
         // Lien HTTP cliquable
-        String linkHttp = "http://192.168.1.8:8080/api/auth/open-reset?email="
+        String linkHttp = "http://192.168.1.6:8080/api/auth/open-reset?email="
                 + java.net.URLEncoder.encode(email, java.nio.charset.StandardCharsets.UTF_8)
                 + "&token=" + token;
 

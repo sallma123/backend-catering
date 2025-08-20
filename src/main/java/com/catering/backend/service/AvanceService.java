@@ -52,4 +52,13 @@ public class AvanceService {
         dto.setDate(avance.getDate());
         return dto;
     }
+    public void supprimerAvance(Long commandeId, Long avanceId) {
+        Avance avance = avanceRepository.findById(avanceId)
+                .orElseThrow(() -> new RuntimeException("Avance introuvable"));
+        if (!avance.getCommande().getId().equals(commandeId)) {
+            throw new RuntimeException("Avance n'appartient pas à la commande");
+        }
+        avanceRepository.delete(avance);
+    }
+
 }

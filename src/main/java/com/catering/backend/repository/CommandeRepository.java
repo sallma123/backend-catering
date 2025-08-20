@@ -16,4 +16,8 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
 
     // 🔁 Pour suppression auto
     List<Commande> findByCorbeilleTrueAndDateSuppressionBefore(LocalDate limite);
+
+    @Query("SELECT MAX(c.numeroCommande) FROM Commande c WHERE YEAR(c.date) = :annee")
+    String findMaxNumeroByYear(@Param("annee") int annee);
+
 }
