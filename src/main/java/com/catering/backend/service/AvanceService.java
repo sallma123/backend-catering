@@ -32,6 +32,7 @@ public class AvanceService {
         Avance avance = new Avance();
         avance.setMontant(dto.getMontant());
         avance.setDate(dto.getDate());
+        avance.setType(dto.getType()); // ✅ sauvegarde du type
         avance.setCommande(commande);
 
         avanceRepository.save(avance);
@@ -50,8 +51,10 @@ public class AvanceService {
         dto.setId(avance.getId());
         dto.setMontant(avance.getMontant());
         dto.setDate(avance.getDate());
+        dto.setType(avance.getType()); // ✅ mapping type -> DTO
         return dto;
     }
+
     public void supprimerAvance(Long commandeId, Long avanceId) {
         Avance avance = avanceRepository.findById(avanceId)
                 .orElseThrow(() -> new RuntimeException("Avance introuvable"));
@@ -60,5 +63,5 @@ public class AvanceService {
         }
         avanceRepository.delete(avance);
     }
-
 }
+

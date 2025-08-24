@@ -15,42 +15,26 @@ public class Avance {
 
     private LocalDate date;
 
+    private String type; // ✅ nouveau champ
+
     @ManyToOne
     @JoinColumn(name = "commande_id")
-    @JsonIgnore //Empêche l'inclusion dans la réponse JSON
+    @JsonIgnore
     private Commande commande;
 
-    // ✅ Getters et Setters
+    // Getters & Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public Double getMontant() { return montant; }
+    public void setMontant(Double montant) { this.montant = montant; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
 
-    public Double getMontant() {
-        return montant;
-    }
+    public String getType() { return type; }   // ✅ getter
+    public void setType(String type) { this.type = type; } // ✅ setter
 
-    public void setMontant(Double montant) {
-        this.montant = montant;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public void setDate(LocalDate date) {
-        this.date = date;
-    }
-
-    public Commande getCommande() {
-        return commande;
-    }
-
-    public void setCommande(Commande commande) {
-        this.commande = commande;
-    }
+    public Commande getCommande() { return commande; }
+    public void setCommande(Commande commande) { this.commande = commande; }
 }
