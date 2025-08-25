@@ -1,10 +1,12 @@
 package com.catering.backend.service;
 
+import com.catering.backend.model.Avance;
 import com.catering.backend.model.Commande;
 import com.catering.backend.model.ProduitCommande;
 import com.catering.backend.repository.CommandeRepository;
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
+import com.lowagie.text.Image;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -247,8 +249,69 @@ public class PdfService {
         table.addCell(totalLabelCell); // Colspan 3 colonnes
         table.addCell(totalValueCell); // Dernière colonne
 
-
         document.add(table);
+
+// 🔹 Ajout de la section avances + signature dans la même ligne
+        if ("PARTICULIER".equalsIgnoreCase(commande.getTypeClient().name())) {
+            List<Avance> avances = commande.getAvances();
+
+            // Création d'un tableau 2 colonnes (avances à gauche, signature à droite)
+            PdfPTable avancesSignatureTable = new PdfPTable(2);
+            avancesSignatureTable.setWidthPercentage(100);
+            avancesSignatureTable.setWidths(new float[]{3f, 1.5f}); // largeur relative colonnes
+
+            // ---- Colonne gauche : Avances ----
+            PdfPCell avancesCell = new PdfPCell();
+            avancesCell.setBorder(Rectangle.NO_BORDER);
+
+            if (avances == null || avances.isEmpty()) {
+                avancesCell.addElement(new Paragraph("1er avance (50%) :", calibri12Bold));
+                avancesCell.addElement(new Paragraph("2ème avance (25%) :", calibri12Bold));
+                avancesCell.addElement(new Paragraph("Reste :", calibri12Bold));
+            } else {
+                for (int i = 0; i < avances.size(); i++) {
+                    Avance avance = avances.get(i);
+                    String ligne = (i + 1) + "ème avance : "
+                            + String.format("%.2f", avance.getMontant()) + " DH";
+                    avancesCell.addElement(new Paragraph(ligne, calibri12Bold));
+                }
+                Paragraph reste = new Paragraph("Reste : "
+                        + String.format("%.2f", commande.getResteAPayer()) + " DH", calibri12Bold);
+                avancesCell.addElement(reste);
+            }
+
+            // ---- Colonne droite : Signature ----
+            PdfPCell signatureCell = new PdfPCell();
+            signatureCell.setBorder(Rectangle.NO_BORDER);
+            signatureCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+            try {
+                Image signature = Image.getInstance("uploads/signature.jpg");
+                signature.scaleAbsolute(80, 40); // ajuste la taille
+                signatureCell.addElement(signature);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            avancesSignatureTable.addCell(avancesCell);
+            avancesSignatureTable.addCell(signatureCell);
+
+            document.add(avancesSignatureTable);
+
+            // 🔹 Ajout de la note en dessous (sur toute la largeur)
+            Font calibri11Note = getCalibriFont(11, Font.NORMAL);
+            calibri11Note.setColor(customColor);
+
+            Paragraph note = new Paragraph(
+                    "Notes : Toute annulation ou changement de dates n'engendrent pas de restitution d'avance ; un avoir d'une durée d'un an est fourni au client.",
+                    calibri11Note
+            );
+            note.setSpacingBefore(5f);
+            document.add(note);
+        }
+
+
+
         document.close();
         writer.close();
         return out.toByteArray();
