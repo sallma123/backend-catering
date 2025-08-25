@@ -34,6 +34,22 @@ public class PdfService {
             return FontFactory.getFont(FontFactory.HELVETICA, size, style);
         }
     }
+
+    // 🔹 Utilitaire pour écrire "1er" / "2ème" / "3ème" avec suffixe en exposant
+    private Phrase formatNumeroAvance(int numero, Font baseFont) {
+        Phrase phrase = new Phrase();
+        // chiffre normal
+        phrase.add(new Chunk(String.valueOf(numero), baseFont));
+        // suffixe en exposant (plus petit)
+        String suffixe = (numero == 1) ? "er" : "ème";
+        Font small = new Font(baseFont);                  // copie pour conserver style/couleur
+        small.setSize(Math.max(6, baseFont.getSize() - 3)); // un peu plus petit (min 6)
+        Chunk sup = new Chunk(suffixe, small);
+        sup.setTextRise(4f); // monte le texte (exposant)
+        phrase.add(sup);
+        return phrase;
+    }
+
     public byte[] genererFicheCommande(Long commandeId) throws Exception {
         Commande commande = commandeRepository.findById(commandeId)
                 .orElseThrow(() -> new Exception("Commande introuvable"));
@@ -109,7 +125,6 @@ public class PdfService {
             table.addCell(headerCell);
         }
 
-
         Map<String, List<ProduitCommande>> produitsParCategorie = new LinkedHashMap<>();
         for (ProduitCommande produit : produitsCoches) {
             produitsParCategorie.computeIfAbsent(produit.getCategorie(), k -> new java.util.ArrayList<>()).add(produit);
@@ -146,9 +161,9 @@ public class PdfService {
                         && produit.equals(produits.get(produits.size() - 1));
 
                 Paragraph para = new Paragraph("‐   " + produit.getNom(), calibri11);
-                para.setLeading(0, 0.9f); // interligne normal
-                para.setFirstLineIndent(1f);     // pas d'indentation pour la première ligne
-                para.setIndentationLeft(19f);    // indentation pour les lignes suivantes
+                para.setLeading(0, 0.9f);    // interligne normal
+                para.setFirstLineIndent(1f); // pas d'indentation pour la première ligne
+                para.setIndentationLeft(19f);// indentation pour les lignes suivantes
 
                 PdfPCell cellDesignation = new PdfPCell();
                 cellDesignation.addElement(para);
@@ -195,7 +210,6 @@ public class PdfService {
         table.addCell(msCell3);
         table.addCell(msCell4);
 
-
         // Produits de Supplément (avec bordure complète)
         produitsParCategorie.entrySet().stream()
                 .filter(e -> e.getKey().equalsIgnoreCase("Supplément"))
@@ -229,7 +243,8 @@ public class PdfService {
                 .mapToDouble(p -> p.getPrix() * (p.getQuantite() != null ? p.getQuantite() : 1)).sum();
 
         double totalGeneral = commande.getPrixParTable() * commande.getNombreTables() + totalSuppl;
-// Ligne Total finale fusionnée (colspan=3)
+
+        // Ligne Total finale fusionnée (colspan=3)
         PdfPCell totalLabelCell = new PdfPCell(new Phrase("Total", calibri12Bold));
         totalLabelCell.setColspan(3); // Fusionne Désignation + Quantité + PU
         totalLabelCell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -238,24 +253,23 @@ public class PdfService {
         totalLabelCell.setBorder(Rectangle.LEFT | Rectangle.RIGHT | Rectangle.BOTTOM);
         totalLabelCell.setBorderWidth(0.5f);
 
-// Cellule valeur total
+        // Cellule valeur total
         PdfPCell totalValueCell = new PdfPCell(new Phrase(masquerPrix ? "" : String.format("%.2f", totalGeneral), calibri12Noir));
         totalValueCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         totalValueCell.setPaddingBottom(5f);
         totalValueCell.setBorder(Rectangle.RIGHT | Rectangle.BOTTOM);
         totalValueCell.setBorderWidth(0.5f);
 
-// Ajout au tableau
+        // Ajout au tableau
         table.addCell(totalLabelCell); // Colspan 3 colonnes
         table.addCell(totalValueCell); // Dernière colonne
 
         document.add(table);
 
-// 🔹 Ajout de la section avances + signature dans la même ligne
+        // 🔹 Avances + signature (même ligne)
         if ("PARTICULIER".equalsIgnoreCase(commande.getTypeClient().name())) {
             List<Avance> avances = commande.getAvances();
 
-            // Création d'un tableau 2 colonnes (avances à gauche, signature à droite)
             PdfPTable avancesSignatureTable = new PdfPTable(2);
             avancesSignatureTable.setWidthPercentage(100);
             avancesSignatureTable.setWidths(new float[]{3f, 1.5f}); // largeur relative colonnes
@@ -263,31 +277,65 @@ public class PdfService {
             // ---- Colonne gauche : Avances ----
             PdfPCell avancesCell = new PdfPCell();
             avancesCell.setBorder(Rectangle.NO_BORDER);
+            avancesCell.setPaddingTop(12f);  // espace avant la liste
+
+            com.lowagie.text.List listeAvances = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);
+            listeAvances.setSymbolIndent(0);
+            listeAvances.setIndentationLeft(0);
+            listeAvances.setAutoindent(false);
+            listeAvances.setListSymbol("");
 
             if (avances == null || avances.isEmpty()) {
-                avancesCell.addElement(new Paragraph("1er avance (50%) :", calibri12Bold));
-                avancesCell.addElement(new Paragraph("2ème avance (25%) :", calibri12Bold));
-                avancesCell.addElement(new Paragraph("Reste :", calibri12Bold));
+                // 1er avance (50%)
+                Phrase p1 = new Phrase();
+                p1.add(formatNumeroAvance(1, calibri12Bold));
+                p1.add(new Chunk(" avance (50%) :", calibri12Bold));
+                ListItem li1 = new ListItem(p1);
+                li1.setSpacingAfter(8f);
+                listeAvances.add(li1);
+
+                // 2ème avance (25%)
+                Phrase p2 = new Phrase();
+                p2.add(formatNumeroAvance(2, calibri12Bold));
+                p2.add(new Chunk(" avance (25%) :", calibri12Bold));
+                ListItem li2 = new ListItem(p2);
+                li2.setSpacingAfter(8f);
+                listeAvances.add(li2);
+
+                // Reste
+                ListItem liR = new ListItem(new Phrase("Reste :", calibri12Bold));
+                liR.setSpacingAfter(8f);
+                listeAvances.add(liR);
             } else {
                 for (int i = 0; i < avances.size(); i++) {
                     Avance avance = avances.get(i);
-                    String ligne = (i + 1) + "ème avance : "
-                            + String.format("%.2f", avance.getMontant()) + " DH";
-                    avancesCell.addElement(new Paragraph(ligne, calibri12Bold));
+                    Phrase p = new Phrase();
+                    p.add(formatNumeroAvance(i + 1, calibri12Bold));
+                    p.add(new Chunk(" avance : " + String.format("%.2f", avance.getMontant()) + " DH", calibri12Bold));
+                    ListItem li = new ListItem(p);
+                    li.setSpacingAfter(8f); // espacement uniforme entre lignes
+                    listeAvances.add(li);
                 }
-                Paragraph reste = new Paragraph("Reste : "
-                        + String.format("%.2f", commande.getResteAPayer()) + " DH", calibri12Bold);
-                avancesCell.addElement(reste);
+                ListItem liReste = new ListItem(new Phrase(
+                        "Reste : " + String.format("%.2f", commande.getResteAPayer()) + " DH", calibri12Bold));
+                liReste.setSpacingAfter(8f);
+                listeAvances.add(liReste);
             }
+
+            avancesCell.addElement(listeAvances);
 
             // ---- Colonne droite : Signature ----
             PdfPCell signatureCell = new PdfPCell();
             signatureCell.setBorder(Rectangle.NO_BORDER);
-            signatureCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            signatureCell.setPaddingTop(20f);
+            signatureCell.setPaddingBottom(1f);
+            signatureCell.setPaddingRight(10f);  // marge droite
+            signatureCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
             try {
                 Image signature = Image.getInstance("uploads/signature.jpg");
-                signature.scaleAbsolute(80, 40); // ajuste la taille
+                signature.scaleAbsolute(100, 50);
+                signature.setAlignment(Image.ALIGN_RIGHT);
                 signatureCell.addElement(signature);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -298,7 +346,7 @@ public class PdfService {
 
             document.add(avancesSignatureTable);
 
-            // 🔹 Ajout de la note en dessous (sur toute la largeur)
+            // 🔹 Note en dessous (toute largeur)
             Font calibri11Note = getCalibriFont(11, Font.NORMAL);
             calibri11Note.setColor(customColor);
 
@@ -309,8 +357,6 @@ public class PdfService {
             note.setSpacingBefore(5f);
             document.add(note);
         }
-
-
 
         document.close();
         writer.close();
