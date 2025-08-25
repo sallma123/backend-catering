@@ -266,18 +266,18 @@ public class PdfService {
 
         document.add(table);
 
-        // 🔹 Avances + signature (même ligne)
+// 🔹 Avances + signature (même ligne)
         if ("PARTICULIER".equalsIgnoreCase(commande.getTypeClient().name())) {
+            // === LOGIQUE PARTICULIER (inchangée) ===
             List<Avance> avances = commande.getAvances();
 
             PdfPTable avancesSignatureTable = new PdfPTable(2);
             avancesSignatureTable.setWidthPercentage(100);
-            avancesSignatureTable.setWidths(new float[]{3f, 1.5f}); // largeur relative colonnes
+            avancesSignatureTable.setWidths(new float[]{3f, 1.5f});
 
-            // ---- Colonne gauche : Avances ----
             PdfPCell avancesCell = new PdfPCell();
             avancesCell.setBorder(Rectangle.NO_BORDER);
-            avancesCell.setPaddingTop(12f);  // espace avant la liste
+            avancesCell.setPaddingTop(12f);
 
             com.lowagie.text.List listeAvances = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);
             listeAvances.setSymbolIndent(0);
@@ -286,7 +286,6 @@ public class PdfService {
             listeAvances.setListSymbol("");
 
             if (avances == null || avances.isEmpty()) {
-                // 1er avance (50%)
                 Phrase p1 = new Phrase();
                 p1.add(formatNumeroAvance(1, calibri12Bold));
                 p1.add(new Chunk(" avance (50%) :", calibri12Bold));
@@ -294,7 +293,6 @@ public class PdfService {
                 li1.setSpacingAfter(8f);
                 listeAvances.add(li1);
 
-                // 2ème avance (25%)
                 Phrase p2 = new Phrase();
                 p2.add(formatNumeroAvance(2, calibri12Bold));
                 p2.add(new Chunk(" avance (25%) :", calibri12Bold));
@@ -302,7 +300,6 @@ public class PdfService {
                 li2.setSpacingAfter(8f);
                 listeAvances.add(li2);
 
-                // Reste
                 ListItem liR = new ListItem(new Phrase("Reste :", calibri12Bold));
                 liR.setSpacingAfter(8f);
                 listeAvances.add(liR);
@@ -313,7 +310,7 @@ public class PdfService {
                     p.add(formatNumeroAvance(i + 1, calibri12Bold));
                     p.add(new Chunk(" avance : " + String.format("%.2f", avance.getMontant()) + " DH", calibri12Bold));
                     ListItem li = new ListItem(p);
-                    li.setSpacingAfter(8f); // espacement uniforme entre lignes
+                    li.setSpacingAfter(8f);
                     listeAvances.add(li);
                 }
                 ListItem liReste = new ListItem(new Phrase(
@@ -324,12 +321,11 @@ public class PdfService {
 
             avancesCell.addElement(listeAvances);
 
-            // ---- Colonne droite : Signature ----
             PdfPCell signatureCell = new PdfPCell();
             signatureCell.setBorder(Rectangle.NO_BORDER);
             signatureCell.setPaddingTop(20f);
             signatureCell.setPaddingBottom(1f);
-            signatureCell.setPaddingRight(10f);  // marge droite
+            signatureCell.setPaddingRight(10f);
             signatureCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
             try {
@@ -346,7 +342,6 @@ public class PdfService {
 
             document.add(avancesSignatureTable);
 
-            // 🔹 Note en dessous (toute largeur)
             Font calibri11Note = getCalibriFont(11, Font.NORMAL);
             calibri11Note.setColor(customColor);
 
@@ -356,7 +351,81 @@ public class PdfService {
             );
             note.setSpacingBefore(5f);
             document.add(note);
+
+        } else if ("ENTREPRISE".equalsIgnoreCase(commande.getTypeClient().name())) {
+            // === LOGIQUE ENTREPRISE (nouvelle) ===
+            List<Avance> avances = commande.getAvances();
+            double totalAvances = (avances == null) ? 0 : avances.stream().mapToDouble(Avance::getMontant).sum();
+
+            PdfPTable avancesSignatureTable = new PdfPTable(2);
+            avancesSignatureTable.setWidthPercentage(100);
+            avancesSignatureTable.setWidths(new float[]{3f, 1.5f});
+
+            PdfPCell avancesCell = new PdfPCell();
+            avancesCell.setBorder(Rectangle.NO_BORDER);
+            avancesCell.setPaddingTop(12f);
+
+            com.lowagie.text.List listeAvances = new com.lowagie.text.List(com.lowagie.text.List.UNORDERED);
+            listeAvances.setSymbolIndent(0);
+            listeAvances.setIndentationLeft(0);
+            listeAvances.setAutoindent(false);
+            listeAvances.setListSymbol("");
+
+            // Avance (total ou 0)
+            ListItem liAvance = new ListItem(new Phrase(
+                    "Avance : " + String.format("%.2f", totalAvances) + " DH", calibri12Bold));
+            liAvance.setSpacingAfter(8f);
+            listeAvances.add(liAvance);
+
+            // Reste
+            ListItem liReste = new ListItem(new Phrase(
+                    "Reste : " + String.format("%.2f", commande.getResteAPayer()) + " DH", calibri12Bold));
+            liReste.setSpacingAfter(8f);
+            listeAvances.add(liReste);
+
+            avancesCell.addElement(listeAvances);
+
+            PdfPCell signatureCell = new PdfPCell();
+            signatureCell.setBorder(Rectangle.NO_BORDER);
+            signatureCell.setPaddingTop(15f);
+            signatureCell.setPaddingBottom(0f);
+            signatureCell.setPaddingRight(10f);
+            signatureCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+
+            try {
+                Image signature = Image.getInstance("uploads/signature.jpg");
+                signature.scaleAbsolute(120, 60);
+                signature.setAlignment(Image.ALIGN_RIGHT);
+                signatureCell.addElement(signature);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            avancesSignatureTable.addCell(avancesCell);
+            avancesSignatureTable.addCell(signatureCell);
+
+            document.add(avancesSignatureTable);
+
+// === Ajout des conditions spécifiques ENTREPRISE ===
+            Font calibri11Note = getCalibriFont(11, Font.NORMAL);
+            calibri11Note.setColor(customColor);
+
+            Paragraph conditions = new Paragraph(
+                    "Conditions de règlement : 50% à la commande et 50% à la livraison",
+                    calibri11Note
+            );
+            conditions.setSpacingBefore(5f);
+            document.add(conditions);
+
+            Paragraph validite = new Paragraph(
+                    "Cette offre est valable 1 mois à partir de la date du devis communiqué.",
+                    calibri11Note
+            );
+            validite.setSpacingBefore(3f);
+            document.add(validite);
+
         }
+
 
         document.close();
         writer.close();
