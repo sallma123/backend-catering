@@ -26,25 +26,19 @@ public class CommandeService {
         this.commandeRepository = commandeRepository;
     }
 
-    public String genererNumeroCommande() {
+    public String genererNumeroCommandeUnique() {
         int anneeActuelle = LocalDate.now().getYear();
+        int compteur = 1;
+        String numero;
 
-        String maxNumero = commandeRepository.findMaxNumeroByYear(anneeActuelle);
+        do {
+            numero = compteur + "/" + anneeActuelle;
+            compteur++;
+        } while (commandeRepository.existsByNumeroCommande(numero));
 
-        int prochainNumero = 1;
-        if (maxNumero != null) {
-            try {
-                // extrait la partie avant "/"
-                int dernier = Integer.parseInt(maxNumero.split("/")[0]);
-                prochainNumero = dernier + 1;
-            } catch (Exception e) {
-                // si parsing échoue, on revient à 1
-                prochainNumero = 1;
-            }
-        }
-
-        return prochainNumero + "/" + anneeActuelle;
+        return numero;
     }
+
 
     public Commande creerCommande(CommandeDTO dto) {
         Commande commande = new Commande();
@@ -57,7 +51,7 @@ public class CommandeService {
         commande.setNombreTables(dto.getNombreTables());
         commande.setPrixParTable(dto.getPrixParTable());
         commande.setDate(LocalDate.parse(dto.getDate()));
-        commande.setNumeroCommande(genererNumeroCommande());
+        commande.setNumeroCommande(genererNumeroCommandeUnique());
         commande.setObjet(dto.getObjet());
         commande.setCommentaire(dto.getCommentaire());
 
@@ -137,9 +131,11 @@ public class CommandeService {
         return dto;
     }
 
+    @Transactional
     public Commande modifierCommande(Long id, CommandeDTO dto) {
         Commande existing = getCommandeById(id);
 
+        // mise à jour des champs simples
         existing.setNomClient(dto.getNomClient());
         existing.setSalle(dto.getSalle());
         existing.setNombreTables(dto.getNombreTables());
@@ -150,7 +146,8 @@ public class CommandeService {
         existing.setObjet(dto.getObjet());
         existing.setCommentaire(dto.getCommentaire());
 
-
+        // suppression des produits existants via le repository
+        existing.getProduits().forEach(p -> p.setCommande(null)); // détacher la relation
         existing.getProduits().clear();
 
         List<ProduitCommande> nouveauxProduits = dto.getProduits().stream()
@@ -161,7 +158,7 @@ public class CommandeService {
                     produit.setCategorie(p.getCategorie());
                     produit.setPrix(p.getPrix());
                     produit.setSelectionne(true);
-                    produit.setQuantite(p.getQuantite() != null ? p.getQuantite() : 1); // ✅ quantité
+                    produit.setQuantite(p.getQuantite() != null ? p.getQuantite() : 1);
                     produit.setCommande(existing);
                     return produit;
                 }).collect(Collectors.toList());
@@ -176,6 +173,7 @@ public class CommandeService {
 
         return commandeRepository.save(existing);
     }
+
     public boolean existeCommandeLe(String dateString) {
         try {
             // 🔧 Supprimer les espaces et sauts de ligne
@@ -199,6 +197,11 @@ public class CommandeService {
         commande.setCorbeille(false);
         commande.setDateSuppression(null);
         commandeRepository.save(commande);
+    }
+    public String getCommandeNomFiche(Long id) {
+        Commande commande = getCommandeById(id);
+        return commande.getDate() + "_" + commande.getTypeCommande() + "_" + commande.getDateFiche();
+
     }
 
     @Scheduled(cron = "0 0 2 * * *") // chaque jour à 2h

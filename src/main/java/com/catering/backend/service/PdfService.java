@@ -308,7 +308,10 @@ public class PdfService {
                     Avance avance = avances.get(i);
                     Phrase p = new Phrase();
                     p.add(formatNumeroAvance(i + 1, calibri12Bold));
-                    p.add(new Chunk(" avance : " + String.format("%.2f", avance.getMontant()) + " DH", calibri12Bold));
+                    p.add(new Chunk(" avance : " +
+                                String.format("%.2f", avance.getMontant()) +
+                                " DH " + "(Le " + avance.getDate() + ", via " + avance.getType() +" )", calibri12Bold));
+
                     ListItem li = new ListItem(p);
                     li.setSpacingAfter(8f);
                     listeAvances.add(li);

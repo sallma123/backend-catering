@@ -53,7 +53,8 @@ public class CommandeController {
             byte[] pdf = pdfService.genererFicheCommande(id);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", "fiche_commande_" + id + ".pdf");
+            String fileName= commandeService.getCommandeNomFiche(id);
+            headers.setContentDispositionFormData("attachment", "fiche_"+fileName + ".pdf");
             return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

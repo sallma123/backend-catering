@@ -17,6 +17,7 @@ public class ProduitCommande {
     private Integer quantite;
     private boolean selectionne;
 
+
     @ManyToOne
     @JoinColumn(name = "commande_id")
     @JsonIgnore
