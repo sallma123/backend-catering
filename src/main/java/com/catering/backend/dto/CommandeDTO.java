@@ -1,6 +1,4 @@
 package com.catering.backend.dto;
-import com.catering.backend.dto.ProduitCommandeDTO;
-
 import java.util.List;
 
 public class CommandeDTO {
@@ -21,6 +19,7 @@ public class CommandeDTO {
     private List<ProduitCommandeDTO> produits;
     private String commentaire;
     private Boolean corbeille;
+    private Boolean signatureCachet;
 
     // --- Getters & Setters ---
     public Long getId() {
@@ -140,5 +139,11 @@ public class CommandeDTO {
     public void setCorbeille(Boolean corbeille) {
         this.corbeille = corbeille;
     }
+    public Boolean getSignatureCachet() {
+        return signatureCachet;
+    }
 
+    public void setSignatureCachet(Boolean signatureCachet) {
+        this.signatureCachet = signatureCachet;
+    }
 }

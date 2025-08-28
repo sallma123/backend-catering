@@ -46,6 +46,8 @@ public class Commande {
 
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateSuppression; // Date à laquelle elle est mise à la corbeille
+    private boolean afficherSignatureCachet = false;
+
 
     // --- Getters et Setters ---
 
@@ -183,5 +185,11 @@ public class Commande {
     public void setDateSuppression(LocalDate dateSuppression) {
         this.dateSuppression = dateSuppression;
     }
+    public boolean isAfficherSignatureCachet() {
+        return afficherSignatureCachet;
+    }
 
+    public void setAfficherSignatureCachet(boolean afficherSignatureCachet) {
+        this.afficherSignatureCachet = afficherSignatureCachet;
+    }
 }

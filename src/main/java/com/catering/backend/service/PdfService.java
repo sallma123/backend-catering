@@ -330,15 +330,21 @@ public class PdfService {
             signatureCell.setPaddingBottom(1f);
             signatureCell.setPaddingRight(10f);
             signatureCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            boolean afficherSignatureCachet = commande.isAfficherSignatureCachet()
+                    && ("PARTICULIER".equalsIgnoreCase(commande.getTypeClient().name())
+                    || "ENTREPRISE".equalsIgnoreCase(commande.getTypeClient().name()));
 
-            try {
-                Image signature = Image.getInstance("uploads/signature.jpg");
-                signature.scaleAbsolute(100, 50);
-                signature.setAlignment(Image.ALIGN_RIGHT);
-                signatureCell.addElement(signature);
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (afficherSignatureCachet) {
+                try {
+                    Image signature = Image.getInstance("uploads/signature.jpg");
+                    signature.scaleAbsolute(120, 60);
+                    signature.setAlignment(Image.ALIGN_RIGHT);
+                    signatureCell.addElement(signature);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+
 
             avancesSignatureTable.addCell(avancesCell);
             avancesSignatureTable.addCell(signatureCell);

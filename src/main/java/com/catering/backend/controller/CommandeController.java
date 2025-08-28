@@ -47,19 +47,52 @@ public class CommandeController {
     }
 
     // ✅ Télécharger la fiche PDF
+// ✅ Télécharger la fiche PDF
     @GetMapping("/{id}/fiche")
     public ResponseEntity<byte[]> genererFiche(@PathVariable Long id) {
         try {
             byte[] pdf = pdfService.genererFicheCommande(id);
+
+            // Récupérer la commande pour construire le nom du fichier
+            Commande commande = commandeService.getCommandeById(id);
+
+            // JJMM → date événement
+            String jjmm = (commande.getDate() != null)
+                    ? String.format("%02d%02d", commande.getDate().getDayOfMonth(), commande.getDate().getMonthValue())
+                    : "0000";
+
+            // Type de commande (mariage, anniversaire…)
+            String typeCommande = (commande.getTypeCommande() != null)
+                    ? commande.getTypeCommande().name().toLowerCase()
+                    : "commande";
+
+            // Date de création de la fiche
+            String dateFiche = (commande.getDateFiche() != null)
+                    ? String.format("%02d%02d%04d",
+                    commande.getDateFiche().getDayOfMonth(),
+                    commande.getDateFiche().getMonthValue(),
+                    commande.getDateFiche().getYear())
+                    : "00000000";
+
+            // Nom final du fichier
+            String filename = String.format("fiche_%s_%s_%s.pdf", jjmm, typeCommande, dateFiche);
+
+            // 🔹 Vérification/log en console
+            System.out.println(">>> Nom du fichier généré : " + filename);
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            String fileName= commandeService.getCommandeNomFiche(id);
-            headers.setContentDispositionFormData("attachment", "fiche_"+fileName + ".pdf");
+            headers.setContentDispositionFormData("attachment", filename);
+
             return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+
         } catch (Exception e) {
+            e.printStackTrace(); // 🔹 pour voir l'erreur exacte si ça plante
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
+
+
     // ✅ Modifier une commande existante
     @PutMapping("/{id}")
     public Commande modifierCommande(@PathVariable Long id, @RequestBody CommandeDTO commandeDTO) {

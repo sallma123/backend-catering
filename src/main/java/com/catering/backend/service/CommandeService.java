@@ -54,6 +54,8 @@ public class CommandeService {
         commande.setNumeroCommande(genererNumeroCommandeUnique());
         commande.setObjet(dto.getObjet());
         commande.setCommentaire(dto.getCommentaire());
+        commande.setAfficherSignatureCachet(dto.getSignatureCachet());
+
 
 
         commande.setDateFiche(LocalDate.now()); // ✅ initialise une seule fois
@@ -115,6 +117,7 @@ public class CommandeService {
         dto.setTotal(commande.getTotal());
         dto.setCommentaire(commande.getCommentaire());
         dto.setCorbeille(commande.isCorbeille());
+        dto.setSignatureCachet(commande.isAfficherSignatureCachet());
 
 
         List<ProduitCommandeDTO> produitsDTO = commande.getProduits().stream().map(p -> {
@@ -145,6 +148,8 @@ public class CommandeService {
         existing.setDate(LocalDate.parse(dto.getDate()));
         existing.setObjet(dto.getObjet());
         existing.setCommentaire(dto.getCommentaire());
+        existing.setAfficherSignatureCachet(dto.getSignatureCachet());
+
 
         // suppression des produits existants via le repository
         existing.getProduits().forEach(p -> p.setCommande(null)); // détacher la relation
@@ -197,11 +202,6 @@ public class CommandeService {
         commande.setCorbeille(false);
         commande.setDateSuppression(null);
         commandeRepository.save(commande);
-    }
-    public String getCommandeNomFiche(Long id) {
-        Commande commande = getCommandeById(id);
-        return commande.getDate() + "_" + commande.getTypeCommande() + "_" + commande.getDateFiche();
-
     }
 
     @Scheduled(cron = "0 0 2 * * *") // chaque jour à 2h
