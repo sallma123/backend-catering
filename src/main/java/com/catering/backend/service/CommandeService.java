@@ -119,6 +119,7 @@ public class CommandeService {
         dto.setCommentaire(commande.getCommentaire());
         dto.setCorbeille(commande.isCorbeille());
         dto.setSignatureCachet(commande.isAfficherSignatureCachet());
+        dto.setLastUpdatedDate(commande.getLastUpdatedDate());
 
 
         List<ProduitCommandeDTO> produitsDTO = commande.getProduits().stream().map(p -> {

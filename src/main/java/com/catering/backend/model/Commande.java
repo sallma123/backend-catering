@@ -2,7 +2,10 @@ package com.catering.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +51,8 @@ public class Commande {
     private LocalDate dateSuppression; // Date à laquelle elle est mise à la corbeille
     private boolean afficherSignatureCachet = false;
 
+    @UpdateTimestamp
+    private LocalDateTime lastUpdatedDate;
 
     // --- Getters et Setters ---
 
@@ -191,5 +196,12 @@ public class Commande {
 
     public void setAfficherSignatureCachet(boolean afficherSignatureCachet) {
         this.afficherSignatureCachet = afficherSignatureCachet;
+    }
+    public LocalDateTime getLastUpdatedDate() {
+        return lastUpdatedDate;
+    }
+
+    public void setLastUpdatedDate(LocalDateTime lastUpdatedDate) {
+        this.lastUpdatedDate = lastUpdatedDate;
     }
 }

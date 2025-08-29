@@ -1,4 +1,5 @@
 package com.catering.backend.dto;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class CommandeDTO {
@@ -20,6 +21,8 @@ public class CommandeDTO {
     private String commentaire;
     private Boolean corbeille;
     private Boolean signatureCachet;
+    private LocalDateTime lastUpdatedDate;
+
 
     // --- Getters & Setters ---
     public Long getId() {
@@ -135,15 +138,19 @@ public class CommandeDTO {
     public Boolean getCorbeille() {
         return corbeille;
     }
-
     public void setCorbeille(Boolean corbeille) {
         this.corbeille = corbeille;
     }
     public Boolean getSignatureCachet() {
         return signatureCachet;
     }
-
     public void setSignatureCachet(Boolean signatureCachet) {
         this.signatureCachet = signatureCachet;
+    }
+    public LocalDateTime getLastUpdatedDate() {
+        return lastUpdatedDate;
+    }
+    public void setLastUpdatedDate(LocalDateTime lastUpdatedDate) {
+        this.lastUpdatedDate = lastUpdatedDate;
     }
 }
