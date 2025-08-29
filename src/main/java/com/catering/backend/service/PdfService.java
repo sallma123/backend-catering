@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -336,10 +337,15 @@ public class PdfService {
 
             if (afficherSignatureCachet) {
                 try {
-                    Image signature = Image.getInstance("uploads/signature.jpg");
-                    signature.scaleAbsolute(120, 60);
-                    signature.setAlignment(Image.ALIGN_RIGHT);
-                    signatureCell.addElement(signature);
+                    InputStream is = getClass().getResourceAsStream("/upload/signature.jpg");
+                    if (is != null) {
+                        Image signature = Image.getInstance(is.readAllBytes());
+                        signature.scaleAbsolute(120, 60);
+                        signature.setAlignment(Image.ALIGN_RIGHT);
+                        signatureCell.addElement(signature);
+                    } else {
+                        System.err.println("⚠️ Signature non trouvée dans resources/uploads !");
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
