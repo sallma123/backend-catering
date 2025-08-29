@@ -54,7 +54,8 @@ public class CommandeService {
         commande.setNumeroCommande(genererNumeroCommandeUnique());
         commande.setObjet(dto.getObjet());
         commande.setCommentaire(dto.getCommentaire());
-        commande.setAfficherSignatureCachet(dto.getSignatureCachet());
+        commande.setAfficherSignatureCachet(dto.getSignatureCachet() != null && dto.getSignatureCachet());
+
 
 
 
@@ -148,7 +149,7 @@ public class CommandeService {
         existing.setDate(LocalDate.parse(dto.getDate()));
         existing.setObjet(dto.getObjet());
         existing.setCommentaire(dto.getCommentaire());
-        existing.setAfficherSignatureCachet(dto.getSignatureCachet());
+        existing.setAfficherSignatureCachet(dto.getSignatureCachet() != null && dto.getSignatureCachet());
 
 
         // suppression des produits existants via le repository
